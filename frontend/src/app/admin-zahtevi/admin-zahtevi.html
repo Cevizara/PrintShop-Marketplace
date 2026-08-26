@@ -1,0 +1,100 @@
+<div class="papir">
+  <span class="mark gl"></span>
+  <span class="mark gd"></span>
+  <span class="mark dl"></span>
+  <span class="mark dd"></span>
+
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap">
+    <div>
+      <span class="nadnaslov">Knjiga naloga &middot; neodobreni korisnici</span>
+      <h1 class="naslov-lista">Zahtevi za registraciju</h1>
+    </div>
+    <span class="znacka" style="color: var(--papir); background: var(--mastilo); border-color: var(--mastilo)">
+      Na čekanju: {{ zahtevi.length }}
+    </span>
+  </div>
+  <div class="crta"></div>
+
+  @if (poruka) {
+    <p class="obavestenje" role="status">{{ poruka }}</p>
+  }
+  @if (greska) {
+    <p class="obavestenje lose" role="alert">{{ greska }}</p>
+  }
+
+  @if (ucitavanje) {
+    <p class="napomena">Učitavanje...</p>
+  } @else if (!zahtevi.length) {
+    <p class="obavestenje">Nema zahteva koji čekaju odobrenje.</p>
+  } @else {
+    <div class="tabela-okvir">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 64px"></th>
+            <th>Korisničko ime</th>
+            <th>Tip</th>
+            <th>Odgovorno lice</th>
+            <th>Kontakt</th>
+            <th>Institucija</th>
+            <th>Datum</th>
+            <th style="width: 190px">Akcija</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (korisnik of zahtevi; track korisnik._id) {
+            <tr>
+              <td>
+                <img [src]="slika(korisnik.profileImage)" alt="Profilna slika"
+                     width="48" height="48"
+                     style="object-fit: cover; border: 1px solid var(--papir-linija)" />
+              </td>
+              <td class="jednosir">{{ korisnik.username }}</td>
+              <td>
+                <span class="znacka" [style.color]="bojaTipa(korisnik.type)">
+                  {{ nazivTipa(korisnik.type) }}
+                </span>
+              </td>
+              <td>{{ korisnik.firstName }} {{ korisnik.lastName }}</td>
+              <td class="prigusen">
+                {{ korisnik.email }}<br />{{ korisnik.phone }}
+              </td>
+              <td class="prigusen">
+                @if (korisnik.institution) {
+                  {{ korisnik.institution.name }}<br />
+                  {{ korisnik.institution.address }}, {{ korisnik.institution.city }}<br />
+                  <span class="sitno">
+                    MB {{ korisnik.institution.registrationNumber }} &middot;
+                    PIB {{ korisnik.institution.taxId }}
+                  </span>
+                } @else {
+                  &mdash;
+                }
+              </td>
+              <td class="prigusen">{{ korisnik.createdAt | date: 'dd.MM.yyyy.' }}</td>
+              <td>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                  <button type="button" class="otisak tamni mali"
+                          [disabled]="uObradi === korisnik._id"
+                          (click)="odluci(korisnik, true)">
+                    Prihvati
+                  </button>
+                  <button type="button" class="otisak obrnuti mali"
+                          [disabled]="uObradi === korisnik._id"
+                          (click)="odluci(korisnik, false)">
+                    Odbaci
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <div class="podnozje-lista">
+    <span class="sitno">Odobren nalog se odmah može prijaviti na sistem.</span>
+    <span class="sitno">PH &middot; knjiga naloga</span>
+  </div>
+</div>

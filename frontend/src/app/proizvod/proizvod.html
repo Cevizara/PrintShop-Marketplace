@@ -1,0 +1,92 @@
+@if (poruka) {
+  <p class="obavestenje tamno" role="alert">{{ poruka }}</p>
+  <p><a routerLink="/">Nazad na početnu stranu</a></p>
+}
+
+@if (proizvod) {
+  <div class="papir">
+    <span class="mark gl"></span>
+    <span class="mark gd"></span>
+    <span class="mark dl"></span>
+    <span class="mark dd"></span>
+
+    <span class="nadnaslov">Karton proizvoda</span>
+    <h1 class="naslov-lista">{{ proizvod.name }}</h1>
+    <div class="crta"></div>
+
+    <div class="raspored">
+
+      <!-- ================= GALERIJA ================= -->
+      <div>
+        <img class="glavna" [src]="slika(prikazana)" [alt]="proizvod.name" />
+
+        @if (sveSlike.length > 1) {
+          <div class="slicice">
+            @for (putanja of sveSlike; track putanja) {
+              <button type="button" class="slicica" [class.izabrana]="putanja === prikazana"
+                      (click)="izaberi(putanja)"
+                      [attr.aria-label]="'Prikaži sliku ' + ($index + 1)">
+                <img [src]="slika(putanja)" [alt]="proizvod.name + ' — slika ' + ($index + 1)" />
+              </button>
+            }
+          </div>
+          <p class="napomena" style="margin-top: 10px">
+            Izabrana slika se pamti u kolačiću ovog pregledača i biće glavna
+            kada sledeći put otvorite ovaj proizvod.
+          </p>
+        }
+      </div>
+
+      <!-- ================= PODACI ================= -->
+      <div>
+        <dl class="stavke">
+          <div class="stavka">
+            <dt>Štamparija</dt>
+            <dd>{{ proizvod.printerName }}</dd>
+          </div>
+          <div class="stavka">
+            <dt>Grad</dt>
+            <dd>{{ proizvod.printerCity }}</dd>
+          </div>
+          <div class="stavka">
+            <dt>Kategorija</dt>
+            <dd>{{ proizvod.categoryName }}</dd>
+          </div>
+          @if (proizvod.subcategoryName) {
+            <div class="stavka">
+              <dt>Potkategorija</dt>
+              <dd>{{ proizvod.subcategoryName }}</dd>
+            </div>
+          }
+          <div class="stavka">
+            <dt>Ocene</dt>
+            <dd class="ocene">
+              <span class="ocena dobra">▲ {{ proizvod.likes }}</span>
+              <span class="ocena losa">▼ {{ proizvod.dislikes }}</span>
+            </dd>
+          </div>
+        </dl>
+
+        <div class="zakljucano">
+          <h3>Dostupno prijavljenim klijentima</h3>
+          <ul>
+            <li>cena po komadu i duži opis</li>
+            <li>dostupne boje</li>
+            <li>vrste štampe sa maksimalnim dimenzijama</li>
+            <li>mapa sa lokacijom štamparije</li>
+          </ul>
+          <a routerLink="/pristup" class="otisak tamni mali"
+             style="display: inline-block; border-bottom: 0">
+            Prijavite se
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="podnozje-lista">
+      <span class="sitno"><a routerLink="/">← Nazad na pretragu</a></span>
+      <span class="sitno">PH &middot; karton</span>
+    </div>
+  </div>
+}

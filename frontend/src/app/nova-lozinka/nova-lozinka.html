@@ -1,0 +1,64 @@
+<div class="papir" style="max-width: 560px; margin: 24px auto 0">
+  <span class="mark gl"></span>
+  <span class="mark gd"></span>
+  <span class="mark dl"></span>
+  <span class="mark dd"></span>
+
+  <span class="nadnaslov">Obrazac 03 &middot; nova lozinka</span>
+  <h1 class="naslov-lista">Postavljanje lozinke</h1>
+  <div class="crta"></div>
+
+  @if (ispravan === null) {
+    <p class="napomena">Provera linka...</p>
+  }
+
+  @if (ispravan === false) {
+    <p class="obavestenje lose" role="alert">
+      Link je istekao ili je već iskorišćen. Link za postavljanje nove lozinke
+      važi 5 minuta od trenutka kada je zatražen, i može se upotrebiti samo jednom.
+    </p>
+    <a routerLink="/zaboravljena-lozinka" class="otisak tamni"
+       style="display: inline-block; border-bottom: 0">
+      Zatraži novi link
+    </a>
+  }
+
+  @if (ispravan === true) {
+    @if (uspeh) {
+      <p class="obavestenje" role="status">{{ uspeh }}</p>
+      <p class="sitno">Za trenutak ćete biti prebačeni na formu za prijavu.</p>
+    } @else {
+      @if (greska) {
+        <p class="obavestenje lose" role="alert">{{ greska }}</p>
+      }
+
+      <form (ngSubmit)="posalji()">
+        <div class="polja">
+          <div class="polje">
+            <label for="nova">Nova lozinka</label>
+            <input id="nova" name="nova" type="password" [(ngModel)]="lozinka"
+                   autocomplete="new-password" />
+            <span class="napomena">
+              8–12 karaktera &middot; počinje slovom &middot; veliko slovo, broj i specijalni znak
+            </span>
+          </div>
+
+          <div class="polje">
+            <label for="potvrda">Potvrda nove lozinke</label>
+            <input id="potvrda" name="potvrda" type="password" [(ngModel)]="potvrda"
+                   autocomplete="new-password" />
+          </div>
+        </div>
+
+        <div style="margin-top: 26px">
+          <button type="submit" class="otisak" [disabled]="slanje">Postavi lozinku</button>
+        </div>
+      </form>
+    }
+  }
+
+  <div class="podnozje-lista">
+    <span class="sitno"><a routerLink="/pristup">← Nazad na prijavu</a></span>
+    <span class="sitno">PH &middot; 03</span>
+  </div>
+</div>

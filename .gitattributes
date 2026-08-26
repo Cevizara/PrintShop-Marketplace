@@ -1,0 +1,12 @@
+# Jedinstveni prelomi redova u repozitorijumu (LF), bez obzira na sistem na kom
+# se radi. Bez ovoga Windows upisuje CRLF, pa se kasnije ceo fajl prikazuje kao
+# izmenjen iako se ništa nije promenilo.
+* text=auto eol=lf
+
+# Binarni fajlovi se ne diraju.
+*.pdf binary
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.ico binary

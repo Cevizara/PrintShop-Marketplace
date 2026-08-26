@@ -1,0 +1,304 @@
+<div class="masina">
+
+  <div class="pisac">
+    <div class="pisac-vrh">
+      <span class="resetka"><i></i><i></i><i></i></span>
+      <span class="lampica" [class.radi]="otvoren"></span>
+    </div>
+
+    <!--
+      Ploča je prekidač između dva obrasca, ne kapija pred njima: strana se
+      otvara odmah na obrascu, a ovim se prelazi na drugi.
+    -->
+    <div class="panel">
+      @if (stanje === 'tip') {
+        <div class="panel-kolona">
+          <span class="panel-oznaka">Tip korisnika</span>
+          <div class="panel-red">
+            @for (tip of tipovi; track tip.vrednost) {
+              <button type="button" class="dugme-tip" (click)="izaberiTip(tip)">
+                {{ tip.naziv }}
+              </button>
+            }
+            <button type="button" class="dugme-nazad" (click)="otvoriPrijavu()">
+              ← Prijava
+            </button>
+          </div>
+        </div>
+      } @else {
+        <div class="panel-red">
+          <button type="button" class="dugme-panel" [class.izabrano]="stanje === 'prijava'"
+                  (click)="otvoriPrijavu()">
+            Prijava
+          </button>
+          <button type="button" class="dugme-panel" [class.izabrano]="uRegistraciji"
+                  (click)="otvoriIzborTipa()">
+            Registracija
+          </button>
+
+          @if (stanje === 'registracija' && izabraniTip) {
+            <span class="znacka-tip">{{ izabraniTip.naziv }}</span>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="prorez"></div>
+
+  <div class="izlaz" [class.otvoren]="otvoren">
+    <div class="papir">
+      <span class="mark gl"></span>
+      <span class="mark gd"></span>
+      <span class="mark dl"></span>
+      <span class="mark dd"></span>
+
+      <!-- ================= PRIJAVA ================= -->
+      @if (stanje === 'prijava') {
+        <div>
+          <span class="nadnaslov">Obrazac 01 &middot; pristup sistemu</span>
+          <h1 class="naslov-lista">Prijava</h1>
+          <div class="crta"></div>
+
+          @if (poruka) {
+            <p class="obavestenje lose" role="alert">{{ poruka }}</p>
+          }
+
+          <form (ngSubmit)="posaljiPrijavu()">
+            <div class="polja">
+              <div class="polje">
+                <label for="p-korisnicko">Korisničko ime</label>
+                <input id="p-korisnicko" name="p-korisnicko" type="text"
+                       [(ngModel)]="korisnickoIme" placeholder="npr. pera" autocomplete="username" />
+              </div>
+
+              <div class="polje">
+                <label for="p-lozinka">Lozinka</label>
+                <input id="p-lozinka" name="p-lozinka" type="password"
+                       [(ngModel)]="lozinka" autocomplete="current-password" />
+              </div>
+            </div>
+
+            <div style="margin-top: 28px">
+              <button type="submit" class="otisak" [disabled]="slanje">Prijavi se</button>
+            </div>
+          </form>
+
+          <div class="podnozje-lista">
+            <span class="sitno">
+              <a routerLink="/zaboravljena-lozinka">Zaboravili ste lozinku?</a>
+            </span>
+            <span class="sitno">PH &middot; 01</span>
+          </div>
+        </div>
+      }
+
+      <!-- ================= REGISTRACIJA ================= -->
+      @if (stanje === 'registracija' && izabraniTip) {
+        <div>
+          <span class="nadnaslov">Obrazac 02 &middot; zahtev za registraciju</span>
+          <h1 class="naslov-lista">{{ izabraniTip.naziv }}</h1>
+          <div class="crta"></div>
+
+          @if (uspeh) {
+            <p class="obavestenje" role="status">{{ uspeh }}</p>
+            <p class="sitno">
+              Nalog postaje aktivan tek kada administrator prihvati zahtev.
+              Do tada prijava neće biti moguća.
+            </p>
+            <div style="margin-top: 22px">
+              <a routerLink="/pristup" class="otisak tamni" style="display: inline-block">
+                Nazad na prijavu
+              </a>
+            </div>
+          } @else {
+            @if (poruka) {
+              <p class="obavestenje lose" role="alert">{{ poruka }}</p>
+            }
+
+            <form (ngSubmit)="posaljiRegistraciju()">
+
+              <div class="odeljak" style="margin-top: 0">
+                <span class="broj">I</span>
+                <span class="tekst">Podaci o nalogu</span>
+                <span class="linija"></span>
+              </div>
+
+              <div class="polja">
+                <div class="polje">
+                  <label for="r-korisnicko">Korisničko ime</label>
+                  <input id="r-korisnicko" name="r-korisnicko" type="text"
+                         [(ngModel)]="korisnickoIme" [class.greska]="greske['username']"
+                         placeholder="jedinstveno u sistemu" />
+                  @if (greske['username']) {
+                    <span class="poruka-greske" role="alert">{{ greske['username'] }}</span>
+                  }
+                </div>
+
+                <div class="polje">
+                  <label for="r-lozinka">Lozinka</label>
+                  <input id="r-lozinka" name="r-lozinka" type="password"
+                         [(ngModel)]="lozinka" [class.greska]="greske['password']" />
+                  @if (greske['password']) {
+                    <span class="poruka-greske" role="alert">{{ greske['password'] }}</span>
+                  } @else {
+                    <span class="napomena">
+                      8–12 karaktera &middot; počinje slovom &middot; veliko slovo, broj i specijalni znak
+                    </span>
+                  }
+                </div>
+              </div>
+
+              <div class="odeljak">
+                <span class="broj">II</span>
+                <span class="tekst">{{ naslovDrugogOdeljka }}</span>
+                <span class="linija"></span>
+              </div>
+
+              <div class="polja">
+                <div class="par">
+                  <div class="polje">
+                    <label for="r-ime">Ime</label>
+                    <input id="r-ime" name="r-ime" type="text"
+                           [(ngModel)]="rIme" [class.greska]="greske['firstName']" />
+                    @if (greske['firstName']) {
+                      <span class="poruka-greske" role="alert">{{ greske['firstName'] }}</span>
+                    }
+                  </div>
+
+                  <div class="polje">
+                    <label for="r-prezime">Prezime</label>
+                    <input id="r-prezime" name="r-prezime" type="text"
+                           [(ngModel)]="rPrezime" [class.greska]="greske['lastName']" />
+                    @if (greske['lastName']) {
+                      <span class="poruka-greske" role="alert">{{ greske['lastName'] }}</span>
+                    }
+                  </div>
+                </div>
+
+                <div class="par">
+                  <div class="polje">
+                    <label for="r-telefon">Kontakt telefon</label>
+                    <input id="r-telefon" name="r-telefon" type="text"
+                           [(ngModel)]="rTelefon" [class.greska]="greske['phone']" />
+                    @if (greske['phone']) {
+                      <span class="poruka-greske" role="alert">{{ greske['phone'] }}</span>
+                    }
+                  </div>
+
+                  <div class="polje">
+                    <label for="r-email">I-mejl adresa</label>
+                    <input id="r-email" name="r-email" type="email"
+                           [(ngModel)]="rEmail" [class.greska]="greske['email']" />
+                    @if (greske['email']) {
+                      <span class="poruka-greske" role="alert">{{ greske['email'] }}</span>
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <!-- Odeljak o instituciji postoji samo za pravno lice i štampariju. -->
+              @if (jeInstitucija) {
+                <div>
+                  <div class="odeljak">
+                    <span class="broj">III</span>
+                    <span class="tekst">Podaci o instituciji</span>
+                    <span class="linija"></span>
+                  </div>
+
+                  <div class="polja">
+                    <div class="polje">
+                      <label for="r-naziv">Naziv institucije</label>
+                      <input id="r-naziv" name="r-naziv" type="text"
+                             [(ngModel)]="rNazivInstitucije"
+                             [class.greska]="greske['institutionName']" />
+                      @if (greske['institutionName']) {
+                        <span class="poruka-greske" role="alert">{{ greske['institutionName'] }}</span>
+                      }
+                    </div>
+
+                    <div class="par" style="grid-template-columns: 1.6fr 1fr">
+                      <div class="polje">
+                        <label for="r-adresa">Adresa sedišta</label>
+                        <input id="r-adresa" name="r-adresa" type="text"
+                               [(ngModel)]="rAdresa" [class.greska]="greske['institutionAddress']" />
+                        @if (greske['institutionAddress']) {
+                          <span class="poruka-greske" role="alert">{{ greske['institutionAddress'] }}</span>
+                        }
+                      </div>
+
+                      <div class="polje">
+                        <label for="r-grad">Grad</label>
+                        <input id="r-grad" name="r-grad" type="text"
+                               [(ngModel)]="rGrad" [class.greska]="greske['institutionCity']" />
+                        @if (greske['institutionCity']) {
+                          <span class="poruka-greske" role="alert">{{ greske['institutionCity'] }}</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="par">
+                      <div class="polje">
+                        <label for="r-maticni">Matični broj</label>
+                        <input id="r-maticni" name="r-maticni" type="text" maxlength="8"
+                               [(ngModel)]="rMaticniBroj" [class.greska]="greske['registrationNumber']"
+                               placeholder="8 cifara" />
+                        @if (greske['registrationNumber']) {
+                          <span class="poruka-greske" role="alert">{{ greske['registrationNumber'] }}</span>
+                        }
+                      </div>
+
+                      <div class="polje">
+                        <label for="r-pib">PIB</label>
+                        <input id="r-pib" name="r-pib" type="text" maxlength="9"
+                               [(ngModel)]="rPib" [class.greska]="greske['taxId']"
+                               placeholder="9 cifara, ne počinje nulom" />
+                        @if (greske['taxId']) {
+                          <span class="poruka-greske" role="alert">{{ greske['taxId'] }}</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <div class="odeljak">
+                <span class="broj">{{ brojPoslednjegOdeljka }}</span>
+                <span class="tekst">Profilna slika</span>
+                <span class="linija"></span>
+              </div>
+
+              <div class="polje">
+                <div class="fajl">
+                  <label class="dugme-fajl" for="r-slika">Izaberi fajl</label>
+                  <input id="r-slika" type="file" accept="image/jpeg,image/png,image/gif"
+                         (change)="izabranaSlika($event)" />
+                  <span class="napomena">
+                    {{ imeSlike || 'JPG · PNG · GIF, od 100×100 do 250×250 px' }}
+                  </span>
+                </div>
+                @if (greske['profileImage']) {
+                  <span class="poruka-greske" role="alert">{{ greske['profileImage'] }}</span>
+                } @else {
+                  <span class="napomena">
+                    Ako je ne dodate, dobijate podrazumevanu profilnu sliku.
+                  </span>
+                }
+              </div>
+
+              <div style="margin-top: 26px">
+                <button type="submit" class="otisak" [disabled]="slanje">Pošalji zahtev</button>
+              </div>
+            </form>
+
+            <div class="podnozje-lista">
+              <span class="sitno">Nalog postaje aktivan nakon odobrenja administratora.</span>
+              <span class="sitno">PH &middot; 02</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+</div>

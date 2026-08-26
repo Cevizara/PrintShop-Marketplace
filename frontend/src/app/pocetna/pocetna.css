@@ -1,0 +1,102 @@
+/* Početna strana: uvodna traka, TOP 5 kao odštampani kartoni, pa pretraga. */
+
+.uvod {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 28px;
+  flex-wrap: wrap;
+  padding-bottom: 26px;
+  border-bottom: 1px solid var(--radionica-linija);
+}
+
+.uvod h1 {
+  font-family: var(--pismo-naslov);
+  font-weight: 400;
+  font-size: 44px;
+  line-height: 1.05;
+  margin: 0;
+  color: var(--papir);
+  max-width: 16ch;
+}
+.uvod p { margin: 12px 0 0; color: var(--radionica-prigusen); max-width: 46ch; }
+
+/* brojač štamparija - istaknut kao oznaka na mašini */
+.brojac {
+  text-align: right;
+  border-left: 1px solid var(--radionica-linija);
+  padding-left: 28px;
+}
+.brojac .broj {
+  font-family: var(--pismo-naslov);
+  font-size: 58px;
+  line-height: 1;
+  color: var(--zuta);
+}
+.brojac .opis {
+  display: block;
+  font-family: var(--pismo-oznaka);
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--radionica-prigusen);
+  margin-top: 8px;
+}
+
+.naslov-odeljka {
+  font-family: var(--pismo-oznaka);
+  font-size: 11px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--radionica-prigusen);
+  margin: 44px 0 18px;
+}
+
+/* TOP 5 */
+.top-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(196px, 1fr));
+  gap: 18px;
+}
+
+.karton {
+  background: var(--papir);
+  color: var(--mastilo);
+  border: 0;
+  padding: 0 0 14px;
+  text-align: left;
+  display: block;
+  box-shadow: 0 14px 28px -12px rgba(0, 0, 0, .7);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+.karton:hover { transform: translateY(-3px); box-shadow: 0 20px 34px -12px rgba(0, 0, 0, .8); }
+
+.karton img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+.karton .telo { padding: 12px 14px 0; }
+.karton .ime { font-weight: 600; font-size: 15px; line-height: 1.3; }
+.karton .stamparija {
+  font-family: var(--pismo-oznaka); font-size: 10px;
+  color: var(--mastilo-blago); margin-top: 5px; line-height: 1.5;
+}
+.karton .ocene {
+  display: flex; align-items: center; gap: 12px; margin-top: 10px;
+  font-family: var(--pismo-oznaka); font-size: 11px; color: var(--mastilo-blago);
+}
+.karton .mesto {
+  position: absolute; margin: 8px 0 0 8px;
+  font-family: var(--pismo-oznaka); font-size: 10px; letter-spacing: .1em;
+  background: var(--mastilo); color: var(--papir); padding: 3px 7px;
+}
+
+/* pretraga */
+.pretraga { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+.pretraga .polje { flex: 1; min-width: 210px; }
+
+.rezultati { margin-top: 26px; }
+
+@media (max-width: 720px) {
+  .uvod h1 { font-size: 32px; }
+  .brojac { border-left: 0; padding-left: 0; text-align: left; }
+  .brojac .broj { font-size: 44px; }
+  .pretraga .otisak { width: 100%; }
+}

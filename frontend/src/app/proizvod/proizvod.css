@@ -1,0 +1,88 @@
+/* Detalji proizvoda: galerija levo, podaci desno. */
+
+.raspored {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.glavna {
+  width: 100%;
+  display: block;
+  border: 1px solid var(--papir-linija);
+  background: var(--papir-senka);
+}
+
+.slicice {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.slicica {
+  width: 74px;
+  height: 74px;
+  padding: 0;
+  border: 1px solid var(--papir-linija);
+  background: var(--papir-senka);
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 140ms ease, transform 140ms ease;
+}
+.slicica img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.slicica:hover { transform: translateY(-2px); }
+.slicica.izabrana { border-color: var(--magenta); border-width: 2px; }
+
+/* podaci o proizvodu kao popunjena stavka obrasca */
+.stavke { display: flex; flex-direction: column; gap: 0; }
+.stavka {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--papir-linija);
+}
+.stavka dt {
+  font-family: var(--pismo-oznaka);
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--mastilo-blago);
+  margin: 0;
+  flex: none;
+}
+.stavka dd { margin: 0; text-align: right; font-size: 15px; }
+
+.ocene { display: flex; gap: 10px; align-items: center; }
+.ocena {
+  font-family: var(--pismo-oznaka);
+  font-size: 12px;
+  padding: 5px 10px;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+}
+.ocena.dobra { color: #1F7A4C; }
+.ocena.losa { color: var(--crvena-zemlja); }
+
+.zakljucano {
+  margin-top: 26px;
+  padding: 16px 18px;
+  border: 1px dashed var(--papir-isprekidana);
+  background: rgba(120, 110, 90, .05);
+}
+.zakljucano h3 {
+  font-family: var(--pismo-oznaka);
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--mastilo-blago);
+  margin: 0 0 8px;
+}
+.zakljucano ul { margin: 0 0 14px; padding-left: 18px; font-size: 14px; color: var(--mastilo-blago); }
+.zakljucano li { margin: 3px 0; }
+
+@media (max-width: 860px) {
+  .raspored { grid-template-columns: 1fr; gap: 26px; }
+}

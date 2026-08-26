@@ -1,0 +1,50 @@
+<div class="masina">
+
+  <div class="pisac">
+    <div class="pisac-vrh">
+      <span class="resetka"><i></i><i></i><i></i></span>
+      <span class="lampica"></span>
+    </div>
+    <div class="plocica">Pristup ograničen &middot; administracija sistema</div>
+  </div>
+
+  <div class="prorez"></div>
+
+  <div class="karton">
+    <div class="pecat">Ovlašćeno<br />osoblje</div>
+
+    <span class="nadnaslov">Obrazac 00 &middot; servisni nalog</span>
+    <h1 class="naslov-lista">Administracija</h1>
+    <div class="crta"></div>
+
+    @if (poruka) {
+      <p class="obavestenje lose" role="alert">{{ poruka }}</p>
+    }
+
+    <form (ngSubmit)="prijava()">
+      <div class="polja">
+        <div class="polje">
+          <label for="a-korisnicko">Korisničko ime</label>
+          <input id="a-korisnicko" name="a-korisnicko" type="text"
+                 [(ngModel)]="korisnickoIme" autocomplete="username" />
+        </div>
+
+        <div class="polje">
+          <label for="a-lozinka">Lozinka</label>
+          <input id="a-lozinka" name="a-lozinka" type="password"
+                 [(ngModel)]="lozinka" autocomplete="current-password" />
+        </div>
+      </div>
+
+      <div style="margin-top: 26px">
+        <button type="submit" class="otisak" [disabled]="slanje">Prijavi se</button>
+      </div>
+    </form>
+
+    <div class="podnozje-lista">
+      <span class="sitno">Ova strana nije povezana sa javnog dela sajta.</span>
+      <span class="sitno">PH &middot; 00</span>
+    </div>
+  </div>
+
+</div>

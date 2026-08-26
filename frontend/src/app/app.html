@@ -1,0 +1,43 @@
+<div class="ljuska">
+
+  <header class="zaglavlje">
+    <div class="znak">
+      <a routerLink="/" class="znak-ime">Printing House</a>
+      <span class="traka-cmyk">
+        <span style="background: var(--cijan)"></span>
+        <span style="background: var(--magenta)"></span>
+        <span style="background: var(--zuta)"></span>
+        <span style="background: var(--papir)"></span>
+      </span>
+    </div>
+
+    <nav class="meni">
+      <a routerLink="/" routerLinkActive="aktivna" [routerLinkActiveOptions]="{ exact: true }">
+        Početna
+      </a>
+
+      @if (!auth.prijavljen) {
+        <a routerLink="/pristup" routerLinkActive="aktivna">Prijava</a>
+        <a routerLink="/registracija" routerLinkActive="aktivna">Registracija</a>
+      }
+
+      @if (auth.jeTipa('ADMIN')) {
+        <a routerLink="/admin/zahtevi" routerLinkActive="aktivna">Zahtevi</a>
+      }
+
+      @if (auth.prijavljen) {
+        <span>{{ auth.korisnik()?.username }}</span>
+        <button type="button" class="otisak tih" (click)="odjava()">Izloguj se</button>
+      }
+    </nav>
+  </header>
+
+  <main class="sadrzaj">
+    <router-outlet></router-outlet>
+  </main>
+
+  <footer class="podnozje">
+    Printing House &middot; {{ godina }}
+  </footer>
+
+</div>

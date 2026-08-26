@@ -1,0 +1,128 @@
+<section class="uvod">
+  <div>
+    <h1>Štampa, od jednog komada do lager liste</h1>
+    <p>
+      Pretražite ponudu svih štamparija na jednom mestu, pripremite svoju štampu
+      i naručite bez odlaska u štampariju.
+    </p>
+  </div>
+
+  @if (podaci) {
+    <div class="brojac">
+      <span class="broj">{{ podaci.printerCount }}</span>
+      <span class="opis">registrovanih štamparija</span>
+    </div>
+  }
+</section>
+
+@if (poruka && !pretrazeno) {
+  <p class="obavestenje tamno" role="alert">{{ poruka }}</p>
+}
+
+<!-- ================= TOP 5 ================= -->
+@if (podaci && podaci.topProducts.length) {
+  <h2 class="naslov-odeljka">Top 5 najbolje ocenjenih proizvoda</h2>
+
+  <div class="top-lista">
+    @for (proizvod of podaci.topProducts; track proizvod._id; let i = $index) {
+      <a class="karton" [routerLink]="['/proizvod', proizvod._id]">
+        <span class="mesto">{{ i + 1 }}</span>
+        <img [src]="slika(proizvod.mainImage)" [alt]="proizvod.name" />
+        <div class="telo">
+          <div class="ime">{{ proizvod.name }}</div>
+          <div class="stamparija">
+            {{ proizvod.printerName }}<br />{{ proizvod.printerCity }}
+          </div>
+          <div class="ocene">
+            <span>▲ {{ proizvod.likes }}</span>
+            <span>▼ {{ proizvod.dislikes }}</span>
+          </div>
+        </div>
+      </a>
+    }
+  </div>
+}
+
+<!-- ================= PRETRAGA ================= -->
+<h2 class="naslov-odeljka">Pretraga štampanih proizvoda</h2>
+
+<div class="papir">
+  <span class="mark gl"></span>
+  <span class="mark gd"></span>
+  <span class="mark dl"></span>
+  <span class="mark dd"></span>
+
+  <form (ngSubmit)="pretrazi()">
+    <div class="pretraga">
+      <div class="polje">
+        <label for="naziv">Naziv proizvoda</label>
+        <input id="naziv" name="naziv" type="text" [(ngModel)]="naziv"
+               placeholder="npr. hemijska olovka, polo majica" />
+      </div>
+
+      <div class="polje">
+        <label for="kategorija">Kategorija</label>
+        <select id="kategorija" name="kategorija" [(ngModel)]="kategorija">
+          <option value="Sve kategorije">Sve kategorije</option>
+          @for (k of kategorije; track k) {
+            <option [value]="k">{{ k }}</option>
+          }
+        </select>
+      </div>
+
+      <button type="submit" class="otisak" [disabled]="ucitavanje">Pretraži</button>
+      <button type="button" class="otisak tih" (click)="ponisti()">Poništi</button>
+    </div>
+  </form>
+
+  <div class="rezultati">
+    @if (poruka && pretrazeno) {
+      <p class="obavestenje">{{ poruka }}</p>
+    }
+
+    @if (rezultati.length) {
+      <div class="tabela-okvir">
+        <table>
+          <thead>
+            <tr>
+              <!-- Sortiranje se pokreće klikom na zaglavlje kolone. -->
+              <th class="sortiraj" (click)="promeniSmer()">
+                Naziv proizvoda {{ smer === 'asc' ? '▲' : '▼' }}
+              </th>
+              <th>Kategorija</th>
+              <th>Štamparija</th>
+              <th>Grad</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (proizvod of rezultati; track proizvod._id) {
+              <tr>
+                <td>{{ proizvod.name }}</td>
+                <td class="prigusen">
+                  {{ proizvod.categoryName }}
+                  @if (proizvod.subcategoryName) {
+                    <br /><span class="sitno">{{ proizvod.subcategoryName }}</span>
+                  }
+                </td>
+                <td>{{ proizvod.printerName }}</td>
+                <td class="prigusen">{{ proizvod.printerCity }}</td>
+                <td>
+                  <a [routerLink]="['/proizvod', proizvod._id]"
+                     class="otisak tamni mali" style="display: inline-block; border-bottom: 0">
+                    Detalji
+                  </a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="podnozje-lista">
+        <span class="sitno">Prikazano proizvoda: {{ rezultati.length }}</span>
+        <span class="sitno">Proizvodi kojih trenutno nema na stanju se ne prikazuju.</span>
+      </div>
+    }
+  </div>
+</div>

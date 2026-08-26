@@ -1,0 +1,69 @@
+<div class="papir" style="max-width: 620px; margin: 24px auto 0">
+  <span class="mark gl"></span>
+  <span class="mark gd"></span>
+  <span class="mark dl"></span>
+  <span class="mark dd"></span>
+
+  <span class="nadnaslov">Obrazac 03 &middot; poništavanje lozinke</span>
+  <h1 class="naslov-lista">Zaboravljena lozinka</h1>
+  <div class="crta"></div>
+
+  @if (!odgovor) {
+    <p class="napomena" style="margin-bottom: 22px">
+      Unesite korisničko ime ili i-mejl adresu naloga. Dobićete privremeni link
+      za postavljanje nove lozinke, koji važi 5 minuta i može se iskoristiti
+      samo jednom.
+    </p>
+
+    @if (greska) {
+      <p class="obavestenje lose" role="alert">{{ greska }}</p>
+    }
+
+    <form (ngSubmit)="posalji()">
+      <div class="polje">
+        <label for="podatak">Korisničko ime ili i-mejl adresa</label>
+        <input id="podatak" name="podatak" type="text" [(ngModel)]="podatak"
+               placeholder="npr. pera ili pera@gmail.com" />
+      </div>
+
+      <div style="margin-top: 26px">
+        <button type="submit" class="otisak" [disabled]="slanje">Zatraži link</button>
+      </div>
+    </form>
+  } @else {
+    <p class="obavestenje" role="status">{{ odgovor.message }}</p>
+
+    <dl class="polja" style="gap: 14px">
+      <div class="polje">
+        <label>Nalog</label>
+        <span class="jednosir">{{ odgovor.username }}</span>
+      </div>
+
+      <div class="polje">
+        <label>Link važi do</label>
+        <span class="jednosir">{{ istice }}</span>
+      </div>
+
+      <div class="polje">
+        <label>Privremeni link</label>
+        <a [href]="odgovor.link" class="jednosir" style="word-break: break-all">
+          {{ odgovor.link }}
+        </a>
+      </div>
+    </dl>
+
+    <div style="margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap">
+      <a [href]="odgovor.link" class="otisak" style="display: inline-block; border-bottom: 0">
+        Otvori link
+      </a>
+      <button type="button" class="otisak tih" (click)="kopiraj()">
+        {{ kopirano ? 'Kopirano' : 'Kopiraj link' }}
+      </button>
+    </div>
+  }
+
+  <div class="podnozje-lista">
+    <span class="sitno"><a routerLink="/pristup">← Nazad na prijavu</a></span>
+    <span class="sitno">PH &middot; 03</span>
+  </div>
+</div>

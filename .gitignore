@@ -1,0 +1,37 @@
+# --- zavisnosti ---
+# Vraćaju se komandom npm install, na osnovu package-lock.json.
+node_modules/
+
+# --- rezultati prevođenja ---
+dist/
+out-tsc/
+.angular/
+*.tsbuildinfo
+
+# --- tajne ---
+# .env sadrži JWT ključ i adresu baze. U repozitorijum ide samo .env.example,
+# kao spisak podešavanja koja postoje.
+.env
+.env.local
+.env.*.local
+
+# --- otpremljeni fajlovi ---
+# Slike koje korisnici otpreme kroz aplikaciju, i uzorci koje pravi seed skript.
+# Ne čuvaju se u repozitorijumu: "npm run seed" ih napravi iznova.
+uploads/
+
+# --- sistemski i uređivački fajlovi ---
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+npm-debug.log*
+.idea/
+.history/
+
+# VS Code: čuvaju se samo podešavanja korisna celom projektu.
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json

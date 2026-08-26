@@ -1,0 +1,97 @@
+/*
+  Administratorski ulaz namerno izgleda drugačije od javnog: kraft papir sa
+  pečatom umesto belog lista. Nije zahtev teksta zadatka, ali odmah pokazuje
+  da je ovo odvojen, nejavni ulaz u sistem.
+*/
+
+.masina { display: flex; flex-direction: column; align-items: center; margin-top: 40px; }
+
+.pisac {
+  width: 520px;
+  max-width: 100%;
+  border-radius: 12px 12px 4px 4px;
+  background: linear-gradient(180deg, #3A3733 0%, #2B2926 44%, #201E1C 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .1),
+    inset 0 -2px 6px rgba(0, 0, 0, .55),
+    0 26px 48px -18px rgba(0, 0, 0, .9);
+  padding: 16px 24px 20px;
+}
+
+.pisac-vrh {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-bottom: 12px; border-bottom: 1px solid rgba(0, 0, 0, .4);
+}
+.resetka { display: flex; flex-direction: column; gap: 3px; }
+.resetka i {
+  display: block; height: 2px; width: 24px; border-radius: 1px;
+  background: rgba(0, 0, 0, .32); box-shadow: 0 1px 0 rgba(255, 255, 255, .06);
+}
+.resetka i:nth-child(2) { width: 18px; }
+.resetka i:nth-child(3) { width: 12px; }
+
+.lampica {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: #C4783A; box-shadow: 0 0 10px #C4783A;
+}
+
+.plocica {
+  margin-top: 16px; background: #161513; border-radius: 5px; padding: 13px;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, .7);
+  font-family: var(--pismo-oznaka); font-size: 11px; letter-spacing: .16em;
+  text-transform: uppercase; color: #8A8272; text-align: center;
+}
+
+.prorez {
+  width: 470px; max-width: 92%; height: 15px;
+  background: linear-gradient(180deg, #0B0A09, #16150F);
+  border-radius: 0 0 5px 5px;
+  box-shadow: inset 0 4px 8px rgba(0, 0, 0, .95), 0 3px 0 rgba(255, 255, 255, .035);
+  position: relative; z-index: 3;
+}
+
+/* servisni nalog na kraft papiru */
+.karton {
+  width: 470px; max-width: 92%;
+  background: #E3D8BE;
+  color: #26221A;
+  padding: 34px 40px 30px;
+  position: relative;
+  box-shadow: 0 22px 44px -14px rgba(0, 0, 0, .8);
+  background-image:
+    linear-gradient(180deg, rgba(0, 0, 0, .06) 0, rgba(0, 0, 0, 0) 20px),
+    repeating-linear-gradient(90deg, rgba(90, 78, 54, .05) 0 2px, transparent 2px 6px);
+}
+/* perforacija po levoj ivici, kao kod servisnih naloga */
+.karton::before {
+  content: ""; position: absolute; top: 0; bottom: 0; left: 16px; width: 1px;
+  background: repeating-linear-gradient(180deg, #B7A97F 0 4px, transparent 4px 9px);
+}
+
+.pecat {
+  position: absolute; top: 26px; right: 30px;
+  transform: rotate(-9deg);
+  border: 2px solid #9A3B22; color: #9A3B22;
+  font-family: var(--pismo-tekst); font-size: 11px; font-weight: 700;
+  letter-spacing: .16em; text-transform: uppercase;
+  padding: 7px 11px; border-radius: 2px; opacity: .82;
+  line-height: 1.25; text-align: center;
+}
+
+.karton .nadnaslov { color: #877B5C; }
+.karton .naslov-lista { font-size: 30px; }
+.karton .crta { background: #26221A; }
+.karton .polje > label { color: #7E7357; }
+.karton input {
+  color: #26221A !important;
+  border-bottom-color: #4A422F !important;
+}
+.karton input:focus { border-bottom-color: #9A3B22 !important; }
+.karton .otisak { background: #26221A; color: #E3D8BE; }
+.karton .podnozje-lista { border-top-color: #B7A97F; }
+.karton .sitno { color: #877B5C; }
+
+@media (max-width: 720px) {
+  .karton { padding: 26px 22px 22px; }
+  .pecat { position: static; display: inline-block; transform: none; margin-bottom: 14px; }
+}
