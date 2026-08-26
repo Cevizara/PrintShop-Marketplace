@@ -1,18 +1,8 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { TipKorisnika } from '../models/models';
 import { AuthService } from '../services/auth.service';
-
-/**
- * prijava      - papir sa obrascem za prijavu
- * tip          - bira se tip korisnika, papir je uvucen
- * registracija - papir sa obrascem za registraciju izabranog tipa
- *
- * Nema praznog pocetnog stanja: strana se otvara odmah na obrascu, jer je
- * korisnik iz menija vec rekao sta hoce. Dugmad na ploci sluze da se predomisli.
- */
-type Stanje = 'prijava' | 'tip' | 'registracija';
 
 interface IzborTipa {
   naziv: string;
@@ -21,25 +11,27 @@ interface IzborTipa {
 }
 
 /**
- * Prijava i registracija na jednoj strani.
+ * Registracija novog korisnika.
  *
- * Zamisao: štampač na vrhu strane iz kog se spušta papir sa obrascem.
- * Tip korisnika se bira PRE štampe, pa izlazi list odgovarajuće dužine -
- * fizičko lice dobija kraći obrazac, pravno lice i štamparija duži.
+ * Ranije je delila komponentu sa prijavom, pa se dugmetom na ploči prelazilo
+ * na prijavu bez promene adrese. Sada je ovo zasebna ruta /registracija, a na
+ * prijavu se ide linkom, koji stvarno menja adresu.
+ *
+ * Ono što je OSTALO na ploči je izbor tipa korisnika - to nije druga strana
+ * nego podešavanje ove: bira se pre štampe, pa iz štampača izlazi list
+ * odgovarajuće dužine. Fizičko lice dobija kraći obrazac, pravno lice i
+ * štamparija duži, jer oni unose i podatke o instituciji.
  *
  * Provere postoje i ovde i na serveru. Ove ovde su radi poruke korisniku;
  * serverske su te koje stvarno štite bazu, jer se klijentske zaobilaze.
  */
 @Component({
-  selector: 'app-pristup',
+  selector: 'app-registracija',
   imports: [FormsModule, RouterLink],
-  templateUrl: './pristup.html',
-  styleUrl: './pristup.css',
+  templateUrl: './registracija.html',
 })
-export class Pristup implements OnInit {
+export class Registracija {
   private auth = inject(AuthService);
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
 
   // Isti izrazi kao na serveru. Ako se menja jedan, mora i drugi.
   private readonly LOZINKA = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])[A-Za-z].{7,11}$/;
@@ -55,14 +47,11 @@ export class Pristup implements OnInit {
     { naziv: 'Štamparija', vrednost: 'PRINTER', institucija: true },
   ];
 
-  stanje: Stanje = 'prijava';
+  /** Dok tip nije izabran, papir stoji u štampaču - nema šta da se odštampa. */
   izabraniTip: IzborTipa | null = null;
 
-  // prijava
   korisnickoIme = '';
   lozinka = '';
-
-  // registracija
   rIme = '';
   rPrezime = '';
   rTelefon = '';
@@ -81,15 +70,8 @@ export class Pristup implements OnInit {
   uspeh = '';
   slanje = false;
 
-  ngOnInit(): void {
-    // Ruta /registracija otvara stranu odmah na izboru tipa korisnika.
-    if (this.route.snapshot.data['rezim'] === 'registracija') {
-      this.stanje = 'tip';
-    }
-  }
-
   get otvoren(): boolean {
-    return this.stanje === 'prijava' || this.stanje === 'registracija';
+    return this.izabraniTip !== null;
   }
 
   get jeInstitucija(): boolean {
@@ -104,63 +86,18 @@ export class Pristup implements OnInit {
     return this.jeInstitucija ? 'IV' : 'III';
   }
 
-  // --- upravljanje štampačem ------------------------------------------------
-
-  /** Je li registracija trenutno aktivan obrazac (bira se tip ili se popunjava). */
-  get uRegistraciji(): boolean {
-    return this.stanje === 'tip' || this.stanje === 'registracija';
-  }
-
-  otvoriPrijavu(): void {
-    if (this.stanje === 'prijava') return;
-    this.ocisti();
-    this.lozinka = '';
-    this.stanje = 'prijava';
-  }
-
-  otvoriIzborTipa(): void {
-    this.ocisti();
-    this.lozinka = '';
-    this.izabraniTip = null;
-    this.stanje = 'tip';
-  }
-
+  /**
+   * Promena tipa NE briše ono što je korisnik već ukucao: prelaskom sa fizičkog
+   * na pravno lice samo se dodaje odeljak o instituciji, a ime, telefon i mejl
+   * ostaju. Brišu se samo poruke, jer se odnose na prethodni obrazac.
+   */
   izaberiTip(tip: IzborTipa): void {
-    this.ocisti();
-    this.izabraniTip = tip;
-    this.stanje = 'registracija';
-  }
+    if (this.izabraniTip === tip) return;
 
-  private ocisti(): void {
+    this.izabraniTip = tip;
     this.greske = {};
     this.poruka = '';
     this.uspeh = '';
-  }
-
-  // --- prijava --------------------------------------------------------------
-
-  posaljiPrijavu(): void {
-    this.ocisti();
-
-    if (!this.korisnickoIme.trim() || !this.lozinka) {
-      this.poruka = 'Unesite korisničko ime i lozinku.';
-      return;
-    }
-
-    this.slanje = true;
-    this.auth.prijava(this.korisnickoIme.trim(), this.lozinka).subscribe({
-      next: (odgovor) => {
-        this.slanje = false;
-        this.auth.zapamtiSesiju(odgovor);
-        this.router.navigate([this.auth.pocetnaRutaZa(odgovor.user.type)]);
-      },
-      error: (greska) => {
-        this.slanje = false;
-        // Server namerno vraća istu poruku za nepostojećeg korisnika i za
-        // pogrešnu lozinku, da se ne otkriva koja imena postoje.
-        this.poruka = greska.error?.message ?? 'Prijava nije uspela.';
-      },
-    });
   }
 
   // --- profilna slika -------------------------------------------------------
@@ -211,7 +148,7 @@ export class Pristup implements OnInit {
     slika.src = adresa;
   }
 
-  // --- registracija ---------------------------------------------------------
+  // --- slanje ---------------------------------------------------------------
 
   private proveriRegistraciju(): boolean {
     const nadjene: Record<string, string> = {};

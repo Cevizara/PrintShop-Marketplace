@@ -66,7 +66,7 @@ export class NovaLozinka implements OnInit {
       next: (odgovor) => {
         this.slanje = false;
         this.uspeh = odgovor.message;
-        setTimeout(() => this.router.navigate(['/pristup']), 2500);
+        setTimeout(() => this.router.navigate(['/prijava']), 2500);
       },
       error: (greska) => {
         this.slanje = false;

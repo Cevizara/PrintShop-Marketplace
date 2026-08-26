@@ -1,0 +1,99 @@
+<div class="papir">
+  <span class="mark gl"></span>
+  <span class="mark gd"></span>
+  <span class="mark dl"></span>
+  <span class="mark dd"></span>
+
+  <div class="zaglavlje-lista">
+    <div>
+      <span class="nadnaslov">Ponuda svih štamparija</span>
+      <h1 class="naslov-lista">Pretraga proizvoda</h1>
+    </div>
+    <span class="znacka" style="color: var(--mastilo)">Rezultata: {{ rezultati.length }}</span>
+  </div>
+  <div class="crta"></div>
+
+  <form (ngSubmit)="pretrazi()">
+    <div class="pretraga">
+      <div class="polje">
+        <label for="k-naziv">Naziv proizvoda</label>
+        <input id="k-naziv" name="k-naziv" type="text" [(ngModel)]="naziv"
+               placeholder="npr. hemijska olovka, polo majica" />
+      </div>
+
+      <div class="polje">
+        <label for="k-kategorija">Kategorija</label>
+        <select id="k-kategorija" name="k-kategorija" [(ngModel)]="kategorija">
+          <option value="Sve kategorije">Sve kategorije</option>
+          @for (k of kategorije; track k) {
+            <option [value]="k">{{ k }}</option>
+          }
+        </select>
+      </div>
+
+      <button type="submit" class="otisak" [disabled]="ucitavanje">Pretraži</button>
+      <button type="button" class="otisak tih" (click)="ponisti()">Poništi</button>
+    </div>
+  </form>
+
+  <div style="margin-top: 26px">
+    @if (poruka) {
+      <p class="obavestenje">{{ poruka }}</p>
+    }
+
+    @if (rezultati.length) {
+      <div class="tabela-okvir">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 56px"></th>
+              <!-- Sortiranje se pokreće klikom na zaglavlje kolone. -->
+              <th class="sortiraj" (click)="promeniSmer()">
+                Naziv proizvoda {{ smer === 'asc' ? '▲' : '▼' }}
+              </th>
+              <th>Kategorija</th>
+              <th>Štamparija</th>
+              <th>Cena po komadu</th>
+              <th>Na stanju</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (proizvod of rezultati; track proizvod._id) {
+              <tr>
+                <td>
+                  <img [src]="slikaProizvoda(proizvod._id, proizvod.mainImage)" [alt]="proizvod.name"
+                       width="40" height="40" class="minijatura" />
+                </td>
+                <td>{{ proizvod.name }}</td>
+                <td class="prigusen">
+                  {{ proizvod.categoryName }}
+                  @if (proizvod.subcategoryName) {
+                    <br /><span class="sitno">{{ proizvod.subcategoryName }}</span>
+                  }
+                </td>
+                <td>
+                  {{ proizvod.printerName }}<br />
+                  <span class="sitno">{{ proizvod.printerCity }}</span>
+                </td>
+                <td class="jednosir">{{ proizvod.unitPrice | number: '1.0-2' }} RSD</td>
+                <td class="jednosir">{{ proizvod.stock }}</td>
+                <td>
+                  <a [routerLink]="['/klijent/proizvod', proizvod._id]"
+                     class="otisak tamni mali veza">
+                    Detalji
+                  </a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <div class="podnozje-lista">
+    <span class="sitno">Proizvodi kojih trenutno nema na stanju se ne prikazuju.</span>
+    <span class="sitno">PH &middot; pretraga</span>
+  </div>
+</div>

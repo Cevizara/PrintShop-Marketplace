@@ -1,0 +1,25 @@
+/* Karton korisnika: slika levo, izbor fajla desno, pa obrazac ispod. */
+
+.slika-red {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.profilna {
+  width: 118px;
+  height: 118px;
+  object-fit: cover;
+  border: 1px solid var(--papir-linija);
+  background: var(--papir-senka);
+  /* Slika je otisak na papiru, pa dobija istu blagu senku kao i sam list. */
+  box-shadow: 0 6px 14px -8px rgba(0, 0, 0, .5);
+}
+
+.slika-desno { flex: 1; min-width: 240px; }
+
+@media (max-width: 720px) {
+  .slika-red { gap: 16px; }
+  .profilna { width: 92px; height: 92px; }
+}

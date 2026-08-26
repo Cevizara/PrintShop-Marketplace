@@ -1,0 +1,176 @@
+/*
+  Prošireni detalji: galerija levo, podaci desno, tabela usluga ispod.
+  Isti raspored kao javna strana - namerno, jer je to isti karton proizvoda,
+  samo popunjen do kraja.
+*/
+
+.raspored {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.glavna {
+  width: 100%;
+  display: block;
+  border: 1px solid var(--papir-linija);
+  background: var(--papir-senka);
+}
+
+.slicice { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+
+.slicica {
+  width: 74px;
+  height: 74px;
+  padding: 0;
+  border: 1px solid var(--papir-linija);
+  background: var(--papir-senka);
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 140ms ease, transform 140ms ease;
+}
+.slicica img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.slicica:hover { transform: translateY(-2px); }
+.slicica.izabrana { border-color: var(--magenta); border-width: 2px; }
+
+/* Cena je najvažniji novi podatak na ovoj strani, pa stoji uz naslov. */
+.cena {
+  font-family: var(--pismo-naslov);
+  font-size: 30px;
+  line-height: 1;
+  color: var(--mastilo);
+  white-space: nowrap;
+}
+.cena small {
+  font-family: var(--pismo-oznaka);
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--mastilo-blago);
+  display: block;
+  margin-top: 6px;
+}
+
+.opis { margin: 0 0 20px; font-size: 15px; line-height: 1.65; }
+
+/* Link koji izgleda kao dugme — globalno podvlačenje mu ne treba. */
+.veza { display: inline-block; border-bottom: 0; }
+
+.stavke { display: flex; flex-direction: column; gap: 0; }
+.stavka {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--papir-linija);
+}
+.stavka dt {
+  font-family: var(--pismo-oznaka);
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--mastilo-blago);
+  margin: 0;
+  flex: none;
+}
+.stavka dd { margin: 0; text-align: right; font-size: 15px; }
+
+.ocene { display: flex; gap: 10px; align-items: center; justify-content: flex-end; }
+.ocena {
+  font-family: var(--pismo-oznaka);
+  font-size: 12px;
+  padding: 5px 10px;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+}
+.ocena.dobra { color: #1F7A4C; }
+.ocena.losa { color: var(--crvena-zemlja); }
+
+/* ---------- komentari ---------- */
+
+.komentari { display: flex; flex-direction: column; gap: 12px; }
+
+.komentar {
+  border-left: 2px solid var(--papir-linija);
+  padding: 10px 0 10px 14px;
+}
+
+/*
+  Sopstveni komentar dobija narandžastu liniju — tekst zadatka traži da se
+  komentari koje je ostavio sam korisnik „uokvire određenom diskretnom linijom
+  u narandžastoj boji". Diskretno: samo ivica i sitna oznaka, bez podloge.
+*/
+.komentar.moj {
+  border: 1px solid #C4783A;
+  border-left-width: 3px;
+  padding: 10px 14px;
+}
+
+.komentar-vrh {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.komentar .ko {
+  font-family: var(--pismo-oznaka);
+  font-size: 11px;
+  letter-spacing: .08em;
+  color: var(--mastilo);
+}
+
+.oznaka-moj {
+  margin-left: 8px;
+  padding: 2px 6px;
+  border: 1px solid #C4783A;
+  border-radius: 2px;
+  color: #C4783A;
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.palac { font-size: 12px; }
+.palac.dobar { color: #1F7A4C; }
+.palac.los { color: var(--crvena-zemlja); }
+
+.tekst-komentara {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--mastilo);
+}
+
+/*
+  Mapa dobija isti okvir kao slika proizvoda - i ona je otisak na papiru, a ne
+  prozor u drugu aplikaciju.
+*/
+.mapa-okvir {
+  border: 1px solid var(--papir-linija);
+  background: var(--papir-senka);
+  line-height: 0;
+}
+
+.mapa {
+  width: 100%;
+  height: 340px;
+  border: 0;
+  display: block;
+}
+
+.ispod-mape {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+@media (max-width: 860px) {
+  .raspored { grid-template-columns: 1fr; gap: 26px; }
+  .cena { font-size: 24px; }
+  .mapa { height: 260px; }
+}

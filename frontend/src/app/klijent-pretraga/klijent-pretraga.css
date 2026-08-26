@@ -1,0 +1,16 @@
+/* Pretraga za prijavljenog klijenta - isti raspored kao javna, sa cenom. */
+
+.pretraga { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+.pretraga .polje { flex: 1; min-width: 210px; }
+
+.minijatura {
+  object-fit: cover;
+  border: 1px solid var(--papir-linija);
+  background: var(--papir-senka);
+}
+
+.veza { display: inline-block; border-bottom: 0; }
+
+@media (max-width: 720px) {
+  .pretraga .otisak { width: 100%; }
+}

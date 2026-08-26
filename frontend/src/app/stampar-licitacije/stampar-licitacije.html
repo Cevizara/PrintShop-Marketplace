@@ -1,0 +1,217 @@
+<div class="papir">
+  <span class="mark gl"></span>
+  <span class="mark gd"></span>
+  <span class="mark dl"></span>
+  <span class="mark dd"></span>
+
+  <div class="zaglavlje-lista">
+    <div>
+      <span class="nadnaslov">Otvoreni pozivi ustanova</span>
+      <h1 class="naslov-lista">Licitacije</h1>
+    </div>
+    <button type="button" class="otisak tih" (click)="ucitaj()">Osveži</button>
+  </div>
+  <div class="crta"></div>
+
+  @if (poruka) {
+    <p class="obavestenje" role="status">{{ poruka }}</p>
+  }
+  @if (greska) {
+    <p class="obavestenje lose" role="alert">{{ greska }}</p>
+  }
+
+  <p class="napomena" style="margin-bottom: 20px">
+    Za svaki traženi proizvod birate <strong>svoj</strong> proizvod iz kataloga i
+    cenu po komadu. Šaljete jednu ponudu po nabavci, sa svim traženim proizvodima.
+    Posao dobija najniža ukupna ponuda koja u trenutku isteka roka ima dovoljne
+    količine na stanju.
+  </p>
+
+  <!-- ================= OTVORENE NABAVKE ================= -->
+  @if (ucitavanje) {
+    <p class="napomena">Učitavanje...</p>
+  } @else if (!nabavke.length) {
+    <p class="obavestenje">Trenutno nema otvorenih javnih nabavki.</p>
+  } @else {
+    <div class="spisak">
+      @for (nabavka of nabavke; track nabavka._id) {
+        <div class="nabavka">
+          <div class="nabavka-vrh">
+            <div>
+              <h2 class="broj-nabavke">{{ nabavka.number }}</h2>
+              <span class="sitno">
+                {{ imeUstanove(nabavka) }} &middot;
+                raspisana {{ nabavka.createdAt | date: 'dd.MM. HH:mm' }}
+              </span>
+            </div>
+            <div class="stanje">
+              <span class="znacka" style="color: var(--magenta)">
+                preostalo: {{ preostalo(nabavka) }}
+              </span>
+              @if (nabavka.myBid) {
+                <span class="sitno">
+                  vaša ponuda: {{ nabavka.myBid.total | number: '1.0-2' }} RSD
+                </span>
+              }
+            </div>
+          </div>
+
+          <div class="tabela-okvir">
+            <table>
+              <thead>
+                <tr>
+                  <th>Traženi proizvod</th>
+                  <th>Kategorija</th>
+                  <th>Količina</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (stavka of nabavka.items; track stavka._id) {
+                  <tr>
+                    <td>{{ stavka.name }}</td>
+                    <td class="prigusen">{{ stavka.categoryName }}</td>
+                    <td class="jednosir">{{ stavka.quantity }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="dugmad">
+            @if (nabavka.myBid) {
+              <span class="sitno">
+                Ponuda je poslata. Po nabavci se šalje samo jedna.
+              </span>
+            } @else {
+              <button type="button" class="otisak tamni mali" (click)="otvoriPonudu(nabavka)">
+                {{ uPonudi === nabavka._id ? 'Zatvori' : 'Pošalji ponudu' }}
+              </button>
+            }
+          </div>
+
+          <!-- ============ OBRAZAC PONUDE ============ -->
+          @if (uPonudi === nabavka._id) {
+            <div class="obrazac">
+              <div class="odeljak" style="margin-top: 0">
+                <span class="broj">01</span>
+                <span class="tekst">Vaša ponuda</span>
+                <span class="linija"></span>
+              </div>
+
+              @for (stavka of nabavka.items; track stavka._id) {
+                <div class="red-ponude">
+                  <div class="trazeno">
+                    <strong>{{ stavka.name }}</strong>
+                    <span class="sitno">
+                      {{ stavka.categoryName }} &middot; traži se {{ stavka.quantity }} kom
+                    </span>
+                  </div>
+
+                  <div class="polje">
+                    <label [attr.for]="'p-' + stavka._id">Nudim iz svog kataloga</label>
+                    <select [id]="'p-' + stavka._id" [name]="'p-' + stavka._id"
+                            [(ngModel)]="unos[stavka._id].productId">
+                      <option value="">— izaberite proizvod —</option>
+                      @for (p of predlozi(stavka.categoryName); track p._id) {
+                        <option [value]="p._id">
+                          {{ p.name }} ({{ p.code }}) &middot; na stanju: {{ p.stock }}
+                        </option>
+                      }
+                    </select>
+                    @if (malo(stavka._id, stavka.quantity)) {
+                      <span class="poruka-greske">
+                        Nemate dovoljno na stanju — ponuda će biti odbačena pri
+                        zaključivanju ako se stanje ne poveća.
+                      </span>
+                    }
+                  </div>
+
+                  <div class="polje uzak">
+                    <label [attr.for]="'c-' + stavka._id">Cena po komadu</label>
+                    <input [id]="'c-' + stavka._id" [name]="'c-' + stavka._id"
+                           type="number" min="0" step="0.01"
+                           [(ngModel)]="unos[stavka._id].unitPrice" />
+                  </div>
+                </div>
+              }
+
+              <div class="zbir">
+                <span>Ukupna ponuda</span>
+                <span class="jednosir">{{ ukupno(nabavka) | number: '1.0-2' }} RSD</span>
+              </div>
+
+              <div class="dugmad">
+                <button type="button" class="otisak mali"
+                        [disabled]="slanje || !popunjeno"
+                        (click)="posalji(nabavka)">
+                  Pošalji ponudu
+                </button>
+                <button type="button" class="otisak tih" (click)="zatvoriPonudu()">
+                  Odustani
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ================= IZVEŠTAJ O MOJIM PONUDAMA ================= -->
+  <div class="odeljak">
+    <span class="broj">02</span>
+    <span class="tekst">Moje poslate ponude</span>
+    <span class="linija"></span>
+  </div>
+
+  @if (!ponude.length) {
+    <p class="napomena">Još niste poslali nijednu ponudu.</p>
+  } @else {
+    <div class="tabela-okvir">
+      <table>
+        <thead>
+          <tr>
+            <th>Nabavka</th>
+            <th>Ustanova</th>
+            <th>Moja ponuda</th>
+            <th>Ishod</th>
+            <th>Poslato</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (stavka of ponude; track stavka.bid._id) {
+            <tr>
+              <td class="jednosir">{{ stavka.procurement.number }}</td>
+              <td>{{ imeUstanove(stavka.procurement) }}</td>
+              <td class="jednosir">{{ stavka.bid.total | number: '1.0-2' }} RSD</td>
+              <td>
+                @if (stavka.procurement.status === 'OPEN') {
+                  <span class="znacka" style="color: var(--magenta)">licitacija u toku</span>
+                } @else if (stavka.won) {
+                  <span class="znacka" style="color: #1F7A4C">dobili ste nabavku</span>
+                } @else if (stavka.procurement.status === 'AWARDED') {
+                  <span class="znacka" style="color: var(--mastilo-blago)">
+                    nije prošla
+                  </span>
+                  <br /><span class="sitno">
+                    najniža: {{ stavka.procurement.winnerTotal | number: '1.0-2' }} RSD
+                  </span>
+                } @else {
+                  <span class="znacka" style="color: var(--crvena-zemlja)">nabavka neuspela</span>
+                }
+              </td>
+              <td class="prigusen">{{ stavka.bid.createdAt | date: 'dd.MM. HH:mm' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <div class="podnozje-lista">
+    <span class="sitno">
+      Lager se proverava tek pri zaključivanju — do tada se može promeniti.
+    </span>
+    <span class="sitno">PH &middot; licitacije</span>
+  </div>
+</div>

@@ -27,7 +27,7 @@
     @for (proizvod of podaci.topProducts; track proizvod._id; let i = $index) {
       <a class="karton" [routerLink]="['/proizvod', proizvod._id]">
         <span class="mesto">{{ i + 1 }}</span>
-        <img [src]="slika(proizvod.mainImage)" [alt]="proizvod.name" />
+        <img [src]="slikaProizvoda(proizvod._id, proizvod.mainImage)" [alt]="proizvod.name" />
         <div class="telo">
           <div class="ime">{{ proizvod.name }}</div>
           <div class="stamparija">

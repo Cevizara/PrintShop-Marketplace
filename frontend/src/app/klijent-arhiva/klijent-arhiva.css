@@ -1,0 +1,58 @@
+/* Arhiva proizvoda: pojedinačne stavke isporučenih i primljenih narudžbina. */
+
+.dugmad { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Otisak koji je klijent pripremio — podsetnik šta je tačno naručio. */
+.pregled {
+  width: 44px;
+  height: 44px;
+  border: 1px dashed var(--papir-isprekidana);
+  background: var(--papir-senka);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.pregled img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+
+.pregled .tekst {
+  font-family: var(--pismo-naslov);
+  font-size: 8px;
+  line-height: 1.1;
+  text-align: center;
+  color: var(--mastilo);
+  word-break: break-word;
+  padding: 2px;
+}
+.pregled .tekst.prazno { color: var(--mastilo-vrlo-blago); font-size: 13px; }
+
+.red-forme {
+  background: rgba(120, 110, 90, .06);
+  border-left: 3px solid var(--mastilo);
+  padding: 20px 18px 22px;
+}
+
+/* Sviđanje i nesviđanje — dva dugmeta, ne skala. */
+.izbor-ocene { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.ocena-dugme {
+  font-family: var(--pismo-oznaka);
+  font-size: 12px;
+  letter-spacing: .08em;
+  padding: 11px 18px;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+.ocena-dugme.dobra { color: #1F7A4C; }
+.ocena-dugme.losa { color: var(--crvena-zemlja); }
+
+/* Izabrana ocena se ispuni bojom, da se odmah vidi šta je izabrano. */
+.ocena-dugme.izabrano { color: var(--papir); }
+.ocena-dugme.dobra.izabrano { background: #1F7A4C; border-color: #1F7A4C; }
+.ocena-dugme.losa.izabrano { background: var(--crvena-zemlja); border-color: var(--crvena-zemlja); }
+
+/* Link koji izgleda kao dugme — globalno podvlačenje mu ne treba. */
+.veza { display: inline-block; border-bottom: 0; }

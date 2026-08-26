@@ -21,6 +21,19 @@ export class AuthService {
    */
   readonly korisnik = signal<Korisnik | null>(this.procitajKorisnika());
 
+  /**
+   * Poruka koju strana za prijavu treba da prikaže kada tamo stignete zato što
+   * je nešto isteklo, a ne zato što ste sami kliknuli „Prijava".
+   *
+   * Server na istekao token već vraća objašnjenje, ali interceptor je do sada
+   * odbacivao i samo preusmeravao — korisnik bi se odjednom našao na prijavi bez
+   * ijedne reči o tome zašto. Ovde se poruka prenese do strane koja je prikaže.
+   *
+   * Signal, a ne parametar u adresi: poruka ne treba da ostane u istoriji
+   * pregledača niti da se vidi ako se link kopira.
+   */
+  readonly porukaSesije = signal('');
+
   private procitajKorisnika(): Korisnik | null {
     const zapis = localStorage.getItem(KLJUC_KORISNIKA);
     if (!zapis) return null;
@@ -79,15 +92,50 @@ export class AuthService {
     this.korisnik.set(odgovor.user);
   }
 
+  /**
+   * Osvežava zapamćenog korisnika posle izmene profila.
+   * Token se NE dira - u njemu su samo identifikator, korisničko ime i tip, a
+   * nijedno od toga se izmenom profila ne menja.
+   */
+  osveziKorisnika(korisnik: Korisnik): void {
+    localStorage.setItem(KLJUC_KORISNIKA, JSON.stringify(korisnik));
+    this.korisnik.set(korisnik);
+  }
+
+  /**
+   * Odjava briše token i zapamćenog korisnika IZ PREGLEDAČA.
+   *
+   * Vredi znati šta odjava NIJE: sam token na serveru i dalje važi do isteka.
+   * Server ne pamti ko je prijavljen — proverava samo potpis — pa nema šta da
+   * poništi. Odjava je „zaboravi propusnicu", ne „ukini propusnicu".
+   *
+   * Prava revokacija bi tražila spisak poništenih tokena na serveru, čime bi se
+   * vratilo stanje koje JWT baš izbegava. Za ovu aplikaciju se ne isplati, ali
+   * je posledica koju svesno prihvatamo, a ne previd.
+   */
   odjava(): void {
     localStorage.removeItem(KLJUC_TOKENA);
     localStorage.removeItem(KLJUC_KORISNIKA);
     this.korisnik.set(null);
+    this.porukaSesije.set('');
     this.router.navigate(['/']);
   }
 
-  /** Gde korisnik ide posle uspesne prijave, prema svom tipu. */
+  /**
+   * Gde korisnik ide posle uspešne prijave, prema svom tipu.
+   * Svaka uloga se otvara na strani koja joj je posao, a ne na javnoj početnoj.
+   */
   pocetnaRutaZa(tip: TipKorisnika): string {
-    return tip === 'ADMIN' ? '/admin/zahtevi' : '/';
+    switch (tip) {
+      case 'ADMIN':
+        return '/admin/zahtevi';
+      case 'PRINTER':
+        return '/stampar/proizvodi';
+      case 'CLIENT_INDIVIDUAL':
+      case 'CLIENT_COMPANY':
+        return '/klijent/pretraga';
+      default:
+        return '/';
+    }
   }
 }

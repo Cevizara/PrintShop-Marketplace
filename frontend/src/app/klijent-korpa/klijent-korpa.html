@@ -1,0 +1,343 @@
+<!--
+  Kutije sa obe strane lista. Nisu podatak nego ukras: korpa je jedina strana
+  na kojoj se nešto pakuje, pa je i jedina koja ih ima. Crtane su u SVG-u iz
+  istog razloga kao slike proizvoda — običan tekst, bez fajla koji se učitava.
+  Na užem ekranu se sklanjaju, da ne otimaju prostor sadržaju.
+-->
+<div class="sa-kutijama">
+
+  <svg class="kutija leva" viewBox="0 0 200 260" aria-hidden="true">
+    <!-- otvoreni preklopi -->
+    <path d="M24 62 L54 30 L146 30 L176 62 Z" fill="#B9985F" stroke="#6E5427" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M24 62 L54 30 L100 30 L100 62 Z" fill="#CBA76B" stroke="#6E5427" stroke-width="2.5" stroke-linejoin="round"/>
+    <!-- telo -->
+    <rect x="24" y="62" width="152" height="164" fill="#C9A468" stroke="#6E5427" stroke-width="2.5"/>
+    <!-- traka -->
+    <rect x="88" y="62" width="24" height="164" fill="#E4D3AE" opacity=".75"/>
+    <path d="M24 108 L176 108" stroke="#6E5427" stroke-width="2" opacity=".35"/>
+    <!-- oznaka za lomljivo -->
+    <g stroke="#6E5427" stroke-width="2" fill="none" opacity=".5">
+      <path d="M44 140 h30 M44 152 h22 M44 164 h30"/>
+    </g>
+  </svg>
+
+  <div class="papir">
+  <span class="mark gl"></span>
+  <span class="mark gd"></span>
+  <span class="mark dl"></span>
+  <span class="mark dd"></span>
+
+  <div class="zaglavlje-lista">
+    <div>
+      <span class="nadnaslov">Trenutna narudžbina</span>
+      <h1 class="naslov-lista">Elektronska korpa</h1>
+    </div>
+    @if (korpa && korpa.itemCount) {
+      <span class="znacka" style="color: var(--mastilo)">
+        Stavki: {{ korpa.itemCount }}
+      </span>
+    }
+  </div>
+  <div class="crta"></div>
+
+  @if (poruka) {
+    <p class="obavestenje" role="status">{{ poruka }}</p>
+  }
+  @if (greska) {
+    <p class="obavestenje lose" role="alert">{{ greska }}</p>
+  }
+
+  <!-- ================= RASPISANA JAVNA NABAVKA ================= -->
+  @if (nabavka) {
+    <div class="odeljak" style="margin-top: 0">
+      <span class="broj">01</span>
+      <span class="tekst">Javna nabavka je raspisana</span>
+      <span class="linija"></span>
+    </div>
+
+    <p class="napomena">
+      Kao pravno lice, potvrdom iz korpe ne dobijate fakture nego poziv
+      štamparijama da pošalju ponude. Licitacija traje 10 minuta, a posao dobija
+      najniža ukupna ponuda sa dovoljnim količinama na stanju.
+    </p>
+
+    <dl class="stavke-nabavke">
+      <div><dt>Broj nabavke</dt><dd class="jednosir">{{ nabavka.number }}</dd></div>
+      <div><dt>Traženih proizvoda</dt><dd class="jednosir">{{ nabavka.itemCount }}</dd></div>
+      <div><dt>Ponude se primaju do</dt><dd class="jednosir">{{ nabavka.deadline | date: 'HH:mm:ss' }}</dd></div>
+    </dl>
+
+    <div class="akcije">
+      <a routerLink="/klijent/nabavke" class="otisak veza">Prati licitaciju</a>
+      <a routerLink="/klijent/pretraga" class="otisak tih veza">Nastavi pretragu</a>
+    </div>
+  }
+
+  <!-- ================= IZDATE FAKTURE ================= -->
+  @if (izdate && izdate.length) {
+    <div class="odeljak" style="margin-top: 0">
+      <span class="broj">01</span>
+      <span class="tekst">Evidentirane fakture</span>
+      <span class="linija"></span>
+    </div>
+
+    <div class="tabela-okvir">
+      <table>
+        <thead>
+          <tr>
+            <th>Broj fakture</th>
+            <th>Štamparija</th>
+            <th>Grad</th>
+            <th>Stavki</th>
+            <th>Iznos</th>
+            <th>PDF na i-mejl</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (faktura of izdate; track faktura.number) {
+            <tr>
+              <td class="jednosir">{{ faktura.number }}</td>
+              <td>{{ faktura.printerName }}</td>
+              <td class="prigusen">{{ faktura.printerCity }}</td>
+              <td class="jednosir">{{ faktura.itemCount }}</td>
+              <td class="jednosir">{{ faktura.total | number: '1.0-2' }} RSD</td>
+
+              <!--
+                Tekst zadatka traži da se faktura dostavi kao PDF na i-mejl.
+                Slanje ne sme da obori narudžbinu koja je već evidentirana, pa
+                se ovde samo prikazuje da li je prošlo.
+              -->
+              <td>
+                @if (faktura.mailSent) {
+                  <span class="znacka" style="color: #1F7A4C">poslato</span>
+                  @if (faktura.mailPreviewUrl) {
+                    <br /><a [href]="faktura.mailPreviewUrl" target="_blank" rel="noopener"
+                             class="sitno">pogledaj poruku ↗</a>
+                  }
+                } @else {
+                  <span class="znacka" style="color: var(--crvena-zemlja)">nije poslato</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ================= PLAĆANJE ================= -->
+    <!--
+      Tekst zadatka traži plaćanje BAŠ ovde: „U e-korpi realizovati nakon
+      pritiska na dugme POTVRDI besplatan servis za plaćanje". Plaća se
+      fakturu/fakture — sve iz ove kupovine, jednom karticom.
+    -->
+    @if (zaPlacanje.length && !platiKasnije) {
+      <app-placanje
+        [fakture]="zaPlacanje"
+        (placeno)="oznaciPlacene($event)"
+        (odustao)="platiKasnije = true" />
+    } @else {
+      <p class="napomena" style="margin-top: 16px">
+        @if (platiKasnije) {
+          Narudžbine su u statusu „naručeno". Fakture možete platiti kasnije, sa
+          strane <a routerLink="/klijent/narudzbine">Narudžbine</a>.
+        } @else {
+          Plaćene narudžbine čekaju da ih štamparija prebaci u status „u štampi".
+        }
+        PDF fakture se u svakom trenutku može otvoriti odatle.
+      </p>
+
+      <div class="akcije">
+        <a routerLink="/klijent/narudzbine" class="otisak veza">Moje narudžbine</a>
+        <a routerLink="/klijent/pretraga" class="otisak tih veza">Nastavi kupovinu</a>
+      </div>
+    }
+  }
+
+  <!-- ================= KORPA ================= -->
+  @if (!izdate && !nabavka) {
+    @if (ucitavanje) {
+      <p class="napomena">Učitavanje...</p>
+    } @else if (!korpa || !korpa.itemCount) {
+      <p class="obavestenje">Korpa je prazna.</p>
+      <div class="akcije">
+        <a routerLink="/klijent/pretraga" class="otisak veza">Idi na pretragu</a>
+      </div>
+    } @else {
+
+      @if (imaNedostupnih) {
+        <p class="obavestenje lose" role="alert">
+          Nekim stavkama je u međuvremenu ponestalo na stanju. Smanjite količinu ili
+          ih izbacite — narudžbina se neće zatvoriti dok ima takvih stavki.
+        </p>
+      }
+
+      <!-- Grupisano po štamparijama, kako traži tekst zadatka. -->
+      @for (grupa of korpa.groups; track grupa.printerId) {
+        <div class="grupa">
+          <div class="grupa-vrh">
+            <div>
+              <h2 class="ime-stamparije">{{ grupa.printerName }}</h2>
+              <span class="sitno">{{ grupa.printerCity }}</span>
+            </div>
+            <span class="znacka" style="color: var(--mastilo)">
+              {{ grupa.total | number: '1.0-2' }} RSD
+            </span>
+          </div>
+
+          <div class="tabela-okvir">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 56px"></th>
+                  <th>Proizvod</th>
+                  <th>Tip štampe</th>
+                  <th>Priprema</th>
+                  <th style="width: 110px">Količina</th>
+                  <th>Ukupna cena</th>
+                  <th style="width: 90px"></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (stavka of grupa.items; track stavka._id) {
+                  <tr [class.nedostupna]="!stavka.available">
+                    <td>
+                      <!--
+                        Proizvod sa otiskom onako kako ga je klijent podesio.
+                        Isti račun kao na strani za pripremu — položaj i širina
+                        su u procentima slike, pa isto podešavanje radi i ovde,
+                        na mnogo manjoj slici.
+                      -->
+                      <div class="pregled">
+                        <img class="podloga" [src]="slika(stavka.mainImage)" [alt]="stavka.name" />
+                        @if (stavka.printImage || stavka.printText) {
+                          <div class="otisak"
+                               [style.left.%]="stavka.printX"
+                               [style.top.%]="stavka.printY"
+                               [style.width.%]="stavka.printScale">
+                            @if (stavka.printImage) {
+                              <img [src]="slika(stavka.printImage)" alt="" />
+                            }
+                            @if (stavka.printText) {
+                              <span>{{ stavka.printText }}</span>
+                            }
+                          </div>
+                        }
+                      </div>
+                    </td>
+                    <td>
+                      {{ stavka.name }}<br />
+                      <span class="sitno">
+                        {{ stavka.code }} &middot; boja: {{ stavka.color }} &middot;
+                        {{ stavka.unitPrice | number: '1.0-2' }} RSD/kom
+                      </span>
+                      @if (!stavka.available) {
+                        <br /><span class="poruka-greske">
+                          Na stanju je još {{ stavka.stock }}.
+                        </span>
+                      }
+                    </td>
+                    <td class="prigusen">
+                      @if (stavka.printType) {
+                        {{ stavka.printType }}<br />
+                        <span class="sitno">
+                          + {{ stavka.extraPricePerPiece | number: '1.0-2' }} RSD/kom
+                        </span>
+                      } @else {
+                        &mdash;
+                      }
+                    </td>
+                    <td class="prigusen">
+                      @if (stavka.printText) {
+                        <span class="sitno">„{{ stavka.printText }}"</span><br />
+                      }
+                      @if (stavka.printImage) {
+                        <span class="sitno">+ sličica</span><br />
+                      }
+                      @if (stavka.printImage || stavka.printText) {
+                        <span class="sitno">
+                          {{ stavka.printScale }}% &middot;
+                          {{ stavka.printX }}/{{ stavka.printY }}
+                        </span>
+                      } @else {
+                        &mdash;
+                      }
+                    </td>
+                    <td>
+                      <input class="kolicina" type="number" min="1" step="1"
+                             [value]="stavka.quantity" [disabled]="slanje"
+                             (change)="promeniKolicinu(stavka, $any($event.target).value)" />
+                    </td>
+                    <td class="jednosir">{{ stavka.lineTotal | number: '1.0-2' }} RSD</td>
+                    <td>
+                      <button type="button" class="otisak tih" [disabled]="slanje"
+                              (click)="izbaci(stavka)">
+                        Izbaci
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- ================= ZBIR I POTVRDA ================= -->
+      <div class="zbir-okvir">
+        <div class="zbir-red">
+          <span>Broj faktura koje će nastati</span>
+          <span class="jednosir">{{ korpa.invoiceCount }}</span>
+        </div>
+        <div class="zbir-red ukupno">
+          <span>Ukupno</span>
+          <span class="jednosir">{{ korpa.total | number: '1.0-2' }} RSD</span>
+        </div>
+      </div>
+
+      <p class="napomena">
+        Proizvodi iz različitih štamparija se fakturišu odvojeno — nastaje po jedna
+        faktura za svaku štampariju.
+      </p>
+
+      @if (jePravnoLice) {
+        <p class="obavestenje">
+          Kao pravno lice, potvrdom raspisujete <strong>javnu nabavku</strong> —
+          fakture ne nastaju odmah, nego tek kada licitacija bude zaključena.
+        </p>
+      }
+
+      <div class="akcije">
+        <button type="button" class="otisak"
+                [disabled]="slanje || imaNedostupnih"
+                (click)="potvrdi()">
+          Potvrdi
+        </button>
+        <button type="button" class="otisak tih" [disabled]="slanje" (click)="isprazni()">
+          Isprazni korpu
+        </button>
+        <span class="sitno">
+          <a routerLink="/klijent/pretraga">← Nastavi kupovinu</a>
+        </span>
+      </div>
+    }
+  }
+
+  <div class="podnozje-lista">
+    <span class="sitno">Lager se skida tek pritiskom na „Potvrdi".</span>
+    <span class="sitno">PH &middot; e-korpa</span>
+  </div>
+  </div>
+
+  <svg class="kutija desna" viewBox="0 0 200 260" aria-hidden="true">
+    <!-- zatvorena, zalepljena kutija -->
+    <path d="M24 54 L100 22 L176 54 L100 86 Z" fill="#CBA76B" stroke="#6E5427" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M24 54 L24 210 L100 242 L100 86 Z" fill="#BE9A5D" stroke="#6E5427" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M176 54 L176 210 L100 242 L100 86 Z" fill="#A98A52" stroke="#6E5427" stroke-width="2.5" stroke-linejoin="round"/>
+    <!-- traka preko poklopca -->
+    <path d="M62 38 L138 70" stroke="#E4D3AE" stroke-width="12" opacity=".8"/>
+    <!-- nalepnica -->
+    <rect x="38" y="120" width="46" height="34" rx="2" fill="#EFE3C6" stroke="#6E5427" stroke-width="1.5" opacity=".9"
+          transform="rotate(11 61 137)"/>
+  </svg>
+
+</div>

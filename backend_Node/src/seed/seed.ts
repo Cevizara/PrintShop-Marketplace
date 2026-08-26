@@ -14,7 +14,7 @@
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 import { env } from "../config/env";
-import { napraviUzorkeSlika } from "./slike";
+import { napraviAvatare, napraviUzorkeSlika } from "./slike";
 import {
   FIZICKA_LICA,
   KATEGORIJE,
@@ -25,7 +25,29 @@ import {
   STAMPARIJE,
 } from "./podaci";
 
-const KOLEKCIJE = ["users", "categories", "products", "ratings", "password_resets"];
+const KOMENTARI = [
+  "Kvalitet je bolji nego što sam očekivao za ovu cenu.",
+  "Isporuka je stigla na vreme, štampa je oštra i postojana.",
+  "Boje su malo tamnije nego na slici, ali sve u svemu korektno.",
+  "Naručivali smo za ceo tim, svi su zadovoljni.",
+  "Materijal je solidan, prati opis.",
+];
+
+const KOLEKCIJE = [
+  "users",
+  "categories",
+  "products",
+  "ratings",
+  "password_resets",
+  "carts",
+  "invoices",
+  // Brojac faktura. Kolekcija se pravi ovde, iako je prvi $inc sam pravi -
+  // aplikacija ima iskljucen autoCreate, pa se sve kolekcije prave iskljucivo
+  // ovim skriptom, kako trazi tekst zadatka.
+  "counters",
+  "procurements",
+  "bids",
+];
 
 const oid = () => new mongoose.Types.ObjectId();
 const hes = (lozinka: string) => bcrypt.hashSync(lozinka, 10);
@@ -96,6 +118,40 @@ async function main(): Promise<void> {
     { key: { expiresAt: 1 }, expireAfterSeconds: 0, name: "ttl_istek" },
   ]);
 
+  await baza.collection("carts").createIndexes([
+    // Jedna korpa po klijentu. Tekst zadatka govori o "trenutnoj elektronskoj
+    // korpi" - jednoj, ne o vise njih.
+    { key: { clientId: 1 }, unique: true, name: "uniq_klijent" },
+  ]);
+
+  await baza.collection("invoices").createIndexes([
+    // Broj fakture je jedinstven. Brojac ga vec pravi atomicno, ali indeks je
+    // poslednja brana - i jedina koja vazi i ako neko upise fakturu mimo koda.
+    { key: { number: 1 }, unique: true, name: "uniq_broj_fakture" },
+    // Tabela narudzbina klijenta: njegove fakture, najnovije prve.
+    { key: { clientId: 1, createdAt: -1 }, name: "idx_klijent_datum" },
+    // Stamparski pregled naruceniih proizvoda, filtriran po statusu.
+    { key: { printerId: 1, status: 1 }, name: "idx_stampar_status" },
+    // Arhiva proizvoda: fakture u statusima isporuceno i primljeno.
+    { key: { clientId: 1, status: 1 }, name: "idx_klijent_status" },
+  ]);
+
+  await baza.collection("procurements").createIndexes([
+    { key: { number: 1 }, unique: true, name: "uniq_broj_nabavke" },
+    // Spisak ustanove, najnovije prvo.
+    { key: { clientId: 1, createdAt: -1 }, name: "idx_ustanova_datum" },
+    // Otvorene nabavke koje stampar vidi, i lenjo zakljucivanje isteklih.
+    { key: { status: 1, deadline: 1 }, name: "idx_status_rok" },
+  ]);
+
+  await baza.collection("bids").createIndexes([
+    // Tekst zadatka: stampar salje JEDNU ponudu po javnoj nabavci.
+    { key: { procurementId: 1, printerId: 1 }, unique: true, name: "uniq_nabavka_stampar" },
+    // Zakljucivanje uzima ponude poredjane po ukupnom iznosu.
+    { key: { procurementId: 1, total: 1 }, name: "idx_nabavka_iznos" },
+    { key: { printerId: 1, createdAt: -1 }, name: "idx_stampar_datum" },
+  ]);
+
   console.log("Indeksi kreirani.");
 
   // 4) Kategorije -----------------------------------------------------------
@@ -114,6 +170,16 @@ async function main(): Promise<void> {
   };
 
   // 5) Korisnici ------------------------------------------------------------
+  // Avatari se prave unapred, da bi svaki nalog imao svoju sliku. Nalozi koji
+  // cekaju odobrenje ih namerno nemaju - oni ostaju na podrazumevanoj slici,
+  // da se na odbrani vidi i taj slucaj.
+  const avatari = napraviAvatare([
+    { username: "admin", firstName: "Milan", lastName: "Petrović" },
+    ...STAMPARIJE,
+    ...FIZICKA_LICA,
+    ...PRAVNA_LICA,
+  ]);
+
   const administrator = {
     _id: oid(),
     username: "admin",
@@ -122,7 +188,7 @@ async function main(): Promise<void> {
     lastName: "Petrović",
     phone: "064 123 4567",
     email: "admin@printinghouse.rs",
-    profileImage: "default_profile_image.jpg",
+    profileImage: avatari["admin"],
     type: "ADMIN",
     status: "APPROVED",
     createdAt: danaRanije(200),
@@ -136,7 +202,7 @@ async function main(): Promise<void> {
     lastName: s.lastName,
     phone: s.phone,
     email: s.email,
-    profileImage: "default_profile_image.jpg",
+    profileImage: avatari[s.username],
     type: "PRINTER",
     status: "APPROVED",
     institution: s.institution,
@@ -151,7 +217,7 @@ async function main(): Promise<void> {
     lastName: k.lastName,
     phone: k.phone,
     email: k.email,
-    profileImage: "default_profile_image.jpg",
+    profileImage: avatari[k.username],
     type: "CLIENT_INDIVIDUAL",
     status: "APPROVED",
     createdAt: danaRanije(140 - redni * 8),
@@ -165,7 +231,7 @@ async function main(): Promise<void> {
     lastName: k.lastName,
     phone: k.phone,
     email: k.email,
-    profileImage: "default_profile_image.jpg",
+    profileImage: avatari[k.username],
     type: "CLIENT_COMPANY",
     status: "APPROVED",
     institution: k.institution,
@@ -192,7 +258,9 @@ async function main(): Promise<void> {
     .insertMany([administrator, ...stamparije, ...fizickaLica, ...pravnaLica, ...naCekanju] as never[]);
 
   // 6) Slike ----------------------------------------------------------------
-  const slike = napraviUzorkeSlika(PROIZVODI.map((p) => ({ code: p.code, name: p.name })));
+  const slike = napraviUzorkeSlika(
+    PROIZVODI.map((p) => ({ code: p.code, name: p.name, potkategorija: p.potkategorija }))
+  );
 
   // 7) Proizvodi ------------------------------------------------------------
   const proizvodi = PROIZVODI.map((p, redni) => {
@@ -241,6 +309,7 @@ async function main(): Promise<void> {
         productId: proizvod._id,
         userId: fizickaLica[i]._id,
         value: i < stavka.svidjanja ? 1 : -1,
+        comment: i < KOMENTARI.length && i % 2 === 0 ? KOMENTARI[i] : "",
         createdAt: datum,
         updatedAt: datum,
       });
@@ -249,7 +318,84 @@ async function main(): Promise<void> {
 
   await baza.collection("ratings").insertMany(ocene as never[]);
 
-  // 9) Izvestaj -------------------------------------------------------------
+  // 9) Fakture --------------------------------------------------------------
+  /*
+   * Zasto seed uopste pravi fakture:
+   *
+   * Dva administratorska grafikona citaju iz kolekcije invoices - promet
+   * stamparija u poslednjem kvartalu i najcesce narucivani proizvodi u mesec
+   * dana. Bez unapred upisanih faktura oba bi na odbrani bila prazna, a tekst
+   * zadatka izricito trazi bazu "popunjenu sa dovoljnom kolicinom podataka".
+   *
+   * Fakture su namerno razbacane kroz TRI MESECA, i deo njih je u poslednjih
+   * mesec dana - tako se vidi da grafikoni stvarno filtriraju po periodu, a ne
+   * da prikazuju sve.
+   *
+   * Lager se ovde NE dira: ove fakture predstavljaju vec zavrsen posao iz
+   * proslosti, a stanje na lageru je ono koje je upisano uz proizvod.
+   */
+  const STATUSI_FAKTURA = ["RECEIVED", "RECEIVED", "DELIVERED", "PRINTING", "ORDERED"];
+  const fakture: unknown[] = [];
+  let brojacFaktura = 0;
+
+  // (redni proizvod, klijent, koliko dana ranije, kolicina)
+  const PLAN_FAKTURA: [number, number, number, number][] = [
+    [0, 0, 84, 12], [1, 1, 80, 40], [4, 2, 76, 3], [7, 3, 71, 25],
+    [5, 4, 66, 200], [2, 5, 61, 8], [10, 6, 55, 30], [12, 7, 50, 60],
+    [3, 0, 44, 500], [8, 1, 39, 300], [0, 2, 33, 18], [13, 3, 28, 45],
+    [1, 4, 24, 20], [6, 5, 19, 15], [11, 6, 15, 22], [0, 7, 11, 30],
+    [1, 0, 8, 35], [14, 1, 6, 1000], [5, 2, 4, 120], [7, 3, 2, 10],
+  ];
+
+  for (const [redniProizvoda, redniKlijenta, dana, kolicina] of PLAN_FAKTURA) {
+    const proizvod = proizvodi[redniProizvoda % proizvodi.length];
+    const klijent = fizickaLica[redniKlijenta % fizickaLica.length];
+    const kada = danaRanije(dana);
+
+    const usluga = proizvod.printServices[0];
+    const dodatna = usluga ? usluga.extraPricePerPiece : 0;
+    const iznos = (proizvod.unitPrice + dodatna) * kolicina;
+
+    brojacFaktura++;
+
+    fakture.push({
+      _id: oid(),
+      number: `PH-${kada.getFullYear()}-${String(brojacFaktura).padStart(4, "0")}`,
+      clientId: klijent._id,
+      printerId: proizvod.printerId,
+      items: [
+        {
+          _id: oid(),
+          productId: proizvod._id,
+          code: proizvod.code,
+          name: proizvod.name,
+          unitPrice: proizvod.unitPrice,
+          quantity: kolicina,
+          color: proizvod.availableColors[0] ?? "Bela",
+          printType: usluga ? usluga.printType : "",
+          extraPricePerPiece: dodatna,
+          printText: "",
+          printImage: "",
+          printX: 50,
+          printY: 50,
+          printScale: 46,
+          lineTotal: iznos,
+        },
+      ],
+      total: iznos,
+      status: STATUSI_FAKTURA[brojacFaktura % STATUSI_FAKTURA.length],
+      createdAt: kada,
+      updatedAt: kada,
+    });
+  }
+
+  await baza.collection("invoices").insertMany(fakture as never[]);
+
+  // Brojac mora da nastavi odakle su stale seed fakture - inace bi prva nova
+  // faktura dobila broj koji vec postoji i pala na jedinstvenom indeksu.
+  await baza.collection("counters").insertOne({ _id: "invoice", seq: brojacFaktura } as never);
+
+  // 10) Izvestaj ------------------------------------------------------------
   const nalozi = [
     ["admin", "Admin123!", "administrator, prijava na /admin/prijava"],
     ...STAMPARIJE.map((s) => [s.username, s.password, "štamparija, " + s.institution.city]),
@@ -258,7 +404,7 @@ async function main(): Promise<void> {
   ];
 
   console.log("");
-  console.log(`Upisano: ${kategorije.length} kategorije, ${proizvodi.length} proizvoda, ${ocene.length} ocena.`);
+  console.log(`Upisano: ${kategorije.length} kategorije, ${proizvodi.length} proizvoda, ${ocene.length} ocena, ${fakture.length} faktura.`);
   console.log("");
   console.log("Nalozi za prijavu:");
   for (const [korisnik, lozinka, opis] of nalozi) {

@@ -229,6 +229,72 @@ export const PROIZVODI = [
       { code: "USL-11", printType: "Lateks štampa", extraPricePerPiece: 0, maxWidthMm: 3000, maxHeightMm: 2600 },
     ],
   },
+
+  /*
+   * Od ovde nadalje: UPOREDIVI proizvodi kod vise stamparija.
+   *
+   * Bez njih javna nabavka ne bi imala sta da prikaze - svaka stamparija je
+   * imala svoje proizvode koji se ni sa cim ne preklapaju, pa bi na licitaciju
+   * izasao po jedan ponudjac i "najniza ponuda" ne bi znacila nista.
+   *
+   * Zato sada polo majicu, solju i vizit karte nudi svaka od tri stamparije,
+   * po razlicitoj ceni. Na odbrani se tako vidi da pobedjuje bas najniza
+   * ukupna ponuda, i da onaj kome ponestane na lageru ispada.
+   */
+  {
+    stampar: 1, code: "PR-011", name: "Polo majica pamuk 200g",
+    description: "Teža pamučna polo majica, pogodna za radne uniforme.",
+    kategorija: "Kreativne štampe", potkategorija: "Štampa na majicama",
+    unitPrice: 1320, stock: 90, boje: ["Bela", "Crna", "Teget"],
+    usluge: [
+      { code: "USL-12", printType: "Direktna štampa na tekstil (DTG)", extraPricePerPiece: 330, maxWidthMm: 300, maxHeightMm: 400 },
+    ],
+  },
+  {
+    stampar: 2, code: "PR-012", name: "Polo majica klasik",
+    description: "Osnovni model polo majice za veće tiraže.",
+    kategorija: "Kreativne štampe", potkategorija: "Štampa na majicama",
+    unitPrice: 1150, stock: 40, boje: ["Bela", "Crna"],
+    usluge: [
+      { code: "USL-13", printType: "Sito štampa", extraPricePerPiece: 220, maxWidthMm: 280, maxHeightMm: 360 },
+    ],
+  },
+  {
+    stampar: 1, code: "PR-013", name: "Šolja keramička 330ml",
+    description: "Bela keramička šolja, pogodna za sublimacionu štampu.",
+    kategorija: "Kreativne štampe", potkategorija: "Šolje",
+    unitPrice: 305, stock: 400, boje: ["Bela"],
+    usluge: [
+      { code: "USL-14", printType: "Sublimaciona štampa", extraPricePerPiece: 140, maxWidthMm: 200, maxHeightMm: 85 },
+    ],
+  },
+  {
+    stampar: 2, code: "PR-014", name: "Šolja bela 330",
+    description: "Keramička šolja standardne zapremine.",
+    kategorija: "Kreativne štampe", potkategorija: "Šolje",
+    unitPrice: 290, stock: 25, boje: ["Bela"],
+    usluge: [
+      { code: "USL-15", printType: "Sublimaciona štampa", extraPricePerPiece: 160, maxWidthMm: 200, maxHeightMm: 85 },
+    ],
+  },
+  {
+    stampar: 1, code: "PR-015", name: "Vizit karte 90x50",
+    description: "Obostrana digitalna štampa na kartonu 300g.",
+    kategorija: "Štampa malih formata", potkategorija: "Vizit karte",
+    unitPrice: 11, stock: 5000, boje: ["Bela"],
+    usluge: [
+      { code: "USL-16", printType: "Digitalna štampa", extraPricePerPiece: 3, maxWidthMm: 90, maxHeightMm: 50 },
+    ],
+  },
+  {
+    stampar: 2, code: "PR-016", name: "Vizit karta standard",
+    description: "Jednostrana štampa, karton 250g.",
+    kategorija: "Štampa malih formata", potkategorija: "Vizit karte",
+    unitPrice: 9, stock: 3000, boje: ["Bela"],
+    usluge: [
+      { code: "USL-17", printType: "Digitalna štampa", extraPricePerPiece: 3, maxWidthMm: 90, maxHeightMm: 50 },
+    ],
+  },
 ];
 
 /**

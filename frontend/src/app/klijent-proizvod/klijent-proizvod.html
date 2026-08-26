@@ -1,0 +1,240 @@
+@if (poruka) {
+  <p class="obavestenje tamno" role="alert">{{ poruka }}</p>
+  <p><a routerLink="/klijent/pretraga">Nazad na pretragu</a></p>
+}
+
+@if (proizvod) {
+  <div class="papir">
+    <span class="mark gl"></span>
+    <span class="mark gd"></span>
+    <span class="mark dl"></span>
+    <span class="mark dd"></span>
+
+    <div class="zaglavlje-lista">
+      <div>
+        <span class="nadnaslov">Karton proizvoda &middot; {{ proizvod.code }}</span>
+        <h1 class="naslov-lista">{{ proizvod.name }}</h1>
+      </div>
+      <span class="cena">{{ proizvod.unitPrice | number: '1.0-2' }} <small>RSD / kom</small></span>
+    </div>
+    <div class="crta"></div>
+
+    <div class="raspored">
+
+      <!-- ================= GALERIJA ================= -->
+      <div>
+        <img class="glavna" [src]="slika(prikazana)" [alt]="proizvod.name" />
+
+        @if (sveSlike.length > 1) {
+          <div class="slicice">
+            @for (putanja of sveSlike; track putanja) {
+              <button type="button" class="slicica" [class.izabrana]="putanja === prikazana"
+                      (click)="izaberi(putanja)"
+                      [attr.aria-label]="'Prikaži sliku ' + ($index + 1)">
+                <img [src]="slika(putanja)" [alt]="proizvod.name + ' — slika ' + ($index + 1)" />
+              </button>
+            }
+          </div>
+          <p class="napomena" style="margin-top: 10px">
+            Izabrana slika se pamti u kolačiću ovog pregledača.
+          </p>
+        }
+      </div>
+
+      <!-- ================= PROŠIRENI PODACI ================= -->
+      <div>
+        @if (proizvod.description) {
+          <p class="opis">{{ proizvod.description }}</p>
+        }
+
+        <dl class="stavke">
+          <div class="stavka">
+            <dt>Štamparija</dt>
+            <dd>
+              {{ proizvod.printerName }}<br />
+              <span class="prigusen">
+                {{ proizvod.printerAddress }}@if (proizvod.printerAddress && proizvod.printerCity) {, }{{ proizvod.printerCity }}
+              </span>
+            </dd>
+          </div>
+
+          <div class="stavka">
+            <dt>Kategorija</dt>
+            <dd>
+              {{ proizvod.categoryName }}
+              @if (proizvod.subcategoryName) {
+                <span class="prigusen">&middot; {{ proizvod.subcategoryName }}</span>
+              }
+            </dd>
+          </div>
+
+          <div class="stavka">
+            <dt>Na stanju</dt>
+            <dd class="jednosir">{{ proizvod.stock }} kom</dd>
+          </div>
+
+          @if (proizvod.likes !== undefined) {
+            <div class="stavka">
+              <dt>Ocene</dt>
+              <dd class="ocene">
+                <span class="ocena dobra">▲ {{ proizvod.likes }}</span>
+                <span class="ocena losa">▼ {{ proizvod.dislikes }}</span>
+              </dd>
+            </div>
+          }
+        </dl>
+
+        <!-- Boja se bira iz padajuće liste - tako traži tekst zadatka. -->
+        <div class="polje" style="margin-top: 20px">
+          <label for="boja">Boja</label>
+          <select id="boja" name="boja" [(ngModel)]="izabranaBoja">
+            @for (boja of proizvod.availableColors; track boja) {
+              <option [value]="boja">{{ boja }}</option>
+            }
+          </select>
+        </div>
+
+        <!--
+          Dugme DALJE vodi na stranu za pripremu proizvoda, gde se unosi tekst
+          ili sličica za štampu i količina, pa se stavka ubacuje u e-korpu.
+        -->
+        <div class="akcije">
+          <a [routerLink]="['/klijent/priprema', proizvod._id]" class="otisak veza">
+            Dalje
+          </a>
+          <span class="sitno">Priprema štampe i dodavanje u korpu</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= USLUGE ŠTAMPE ================= -->
+    <div class="odeljak">
+      <span class="broj">01</span>
+      <span class="tekst">Vrste štampe na ovom proizvodu</span>
+      <span class="linija"></span>
+    </div>
+
+    @if (proizvod.printServices.length) {
+      <div class="tabela-okvir">
+        <table>
+          <thead>
+            <tr>
+              <th>Šifra</th>
+              <th>Tip štampe</th>
+              <th>Maksimalne dimenzije</th>
+              <th>Dodatna cena po komadu</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (usluga of proizvod.printServices; track usluga.code) {
+              <tr>
+                <td class="jednosir">{{ usluga.code }}</td>
+                <td>{{ usluga.printType }}</td>
+                <td class="jednosir">{{ usluga.maxWidthMm }} × {{ usluga.maxHeightMm }} mm</td>
+                <td class="jednosir">
+                  + {{ usluga.extraPricePerPiece | number: '1.0-2' }} RSD
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <p class="napomena">Za ovaj proizvod štamparija nije definisala posebne usluge štampe.</p>
+    }
+
+    <!-- ================= KOMENTARI ================= -->
+    <div class="odeljak">
+      <span class="broj">02</span>
+      <span class="tekst">Šta kažu klijenti</span>
+      <span class="linija"></span>
+    </div>
+
+    @if (komentari) {
+      @if (komentari.comments.length) {
+        <div class="komentari">
+          @for (komentar of komentari.comments; track komentar._id) {
+            <!--
+              Sopstveni komentar dobija narandžasti okvir — tekst zadatka to
+              izričito traži, da klijent u nizu odmah prepozna svoj.
+            -->
+            <div class="komentar" [class.moj]="mojKomentar(komentar)">
+              <div class="komentar-vrh">
+                <span class="ko">
+                  {{ komentar.username }}
+                  @if (mojKomentar(komentar)) {
+                    <span class="oznaka-moj">vaš komentar</span>
+                  }
+                </span>
+                <span class="sitno">
+                  <span [class]="komentar.value === 1 ? 'palac dobar' : 'palac los'">
+                    {{ komentar.value === 1 ? '▲' : '▼' }}
+                  </span>
+                  {{ komentar.createdAt | date: 'dd.MM.yyyy.' }}
+                </span>
+              </div>
+              <p class="tekst-komentara">{{ komentar.comment }}</p>
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="napomena">Za ovaj proizvod još nema komentara.</p>
+      }
+
+      @if (komentari.canRate) {
+        <p class="napomena" style="margin-top: 14px">
+          Ovaj proizvod ste primili — ocenu i komentar ostavljate u
+          <a routerLink="/klijent/arhiva">arhivi proizvoda</a>.
+        </p>
+      } @else {
+        <p class="napomena" style="margin-top: 14px">
+          Komentar mogu ostaviti samo klijenti koji su ovaj proizvod primili.
+        </p>
+      }
+    }
+
+    <!-- ================= MAPA ================= -->
+    <div class="odeljak">
+      <span class="broj">02</span>
+      <span class="tekst">Gde se štamparija nalazi</span>
+      <span class="linija"></span>
+    </div>
+
+    @if (imaMapu) {
+      <div class="mapa-okvir">
+        <!--
+          Mapa je ugradna strana OpenStreetMap-a. Bez ključa i bez biblioteke -
+          tekst zadatka dozvoljava spoljne interfejse za mape.
+        -->
+        <iframe
+          class="mapa"
+          [src]="mapaUrl"
+          [title]="'Mapa — ' + proizvod.printerName"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+
+      <div class="ispod-mape">
+        <span class="sitno">
+          {{ proizvod.printerName }} &middot; {{ proizvod.printerAddress }},
+          {{ proizvod.printerCity }}
+        </span>
+        <span class="sitno">
+          <a [href]="mapaVelikaUrl" target="_blank" rel="noopener">
+            Otvori u punoj mapi ↗
+          </a>
+        </span>
+      </div>
+    } @else {
+      <p class="napomena">
+        Ova štamparija još nije unela svoju lokaciju, pa mapa nije dostupna.
+        Adresa: {{ proizvod.printerAddress }}, {{ proizvod.printerCity }}.
+      </p>
+    }
+
+    <div class="podnozje-lista">
+      <span class="sitno"><a routerLink="/klijent/pretraga">← Nazad na pretragu</a></span>
+      <span class="sitno">PH &middot; karton</span>
+    </div>
+  </div>
+}

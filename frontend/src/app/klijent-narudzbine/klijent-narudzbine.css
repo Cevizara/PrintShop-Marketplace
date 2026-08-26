@@ -1,0 +1,22 @@
+/* Knjiga faktura: tabela narudžbina sa sortiranjem po zaglavlju kolone. */
+
+/* Numerisani spisak proizvoda unutar ćelije — tekst zadatka traži baš numerisan. */
+.proizvodi {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.proizvodi li { margin: 2px 0; }
+.proizvodi .sitno { display: block; }
+
+.dugmad { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.red-forme {
+  background: rgba(120, 110, 90, .06);
+  border-left: 3px solid var(--crvena-zemlja);
+  padding: 18px;
+}
+
+/* Link koji izgleda kao dugme — globalno podvlačenje mu ne treba. */
+.veza { display: inline-block; border-bottom: 0; }

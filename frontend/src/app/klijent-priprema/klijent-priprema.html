@@ -1,0 +1,197 @@
+@if (ucitavanje) {
+  <p class="obavestenje tamno">Učitavanje...</p>
+}
+
+@if (poruka && !proizvod) {
+  <p class="obavestenje tamno" role="alert">{{ poruka }}</p>
+  <p><a routerLink="/klijent/pretraga">Nazad na pretragu</a></p>
+}
+
+@if (proizvod) {
+  <div class="papir">
+    <span class="mark gl"></span>
+    <span class="mark gd"></span>
+    <span class="mark dl"></span>
+    <span class="mark dd"></span>
+
+    <div class="zaglavlje-lista">
+      <div>
+        <span class="nadnaslov">Obrazac 05 &middot; priprema za štampu</span>
+        <h1 class="naslov-lista">{{ proizvod.name }}</h1>
+      </div>
+      <span class="znacka" style="color: var(--mastilo)">Na stanju: {{ proizvod.stock }}</span>
+    </div>
+    <div class="crta"></div>
+
+    @if (poruka) {
+      <p class="obavestenje lose" role="alert">{{ poruka }}</p>
+    }
+
+    <div class="raspored">
+
+      <!-- ================= PRIKAZ ŠTAMPE NA PROIZVODU ================= -->
+      <div>
+        <!--
+          Tekst i sličica se prikazuju PREKO slike proizvoda, CSS preklapanjem.
+          Fusnota 3 teksta zadatka to izričito dozvoljava i kaže da nikakva
+          obrada slika na serveru nije potrebna.
+        -->
+        <div class="platno" #platno
+             (pointermove)="vuci($event, platno)"
+             (pointerup)="zavrsiVucenje()"
+             (pointercancel)="zavrsiVucenje()">
+          <img class="podloga" [src]="slika(proizvod.mainImage)" [alt]="proizvod.name" />
+
+          @if (imaOtisak) {
+            <!--
+              Otisak se prevlači mišem po proizvodu, a njegova širina se menja
+              klizačem ispod. Položaj i širina se čuvaju u procentima slike, pa
+              isto podešavanje važi i u korpi i kod štamparije.
+            -->
+            <div class="otisak-stampe"
+                 [class.vuce-se]="true"
+                 [style.left.%]="otisakX"
+                 [style.top.%]="otisakY"
+                 [style.width.%]="otisakSirina"
+                 (pointerdown)="pocniVucenje($event)">
+              @if (pregledSlicice) {
+                <img class="slicica" [src]="pregledSlicice" alt="Sličica za štampu" />
+              }
+              @if (tekst.trim()) {
+                <span class="tekst-stampe">{{ tekst }}</span>
+              }
+            </div>
+          }
+        </div>
+
+        @if (imaOtisak) {
+          <div class="upravljanje">
+            <div class="polje">
+              <label for="pr-velicina">Veličina otiska</label>
+              <input id="pr-velicina" name="pr-velicina" type="range" min="10" max="100" step="1"
+                     [(ngModel)]="otisakSirina" />
+              <span class="napomena">
+                {{ otisakSirina }}% širine proizvoda &middot; prevucite otisak mišem da ga pomerite
+              </span>
+            </div>
+            <button type="button" class="otisak tih" (click)="centriraj()">Centriraj</button>
+          </div>
+        } @else {
+          <p class="napomena" style="margin-top: 10px">
+            Unesite tekst ili dodajte sličicu — otisak će se pojaviti na proizvodu,
+            pa ga možete pomerati i menjati mu veličinu.
+          </p>
+        }
+
+        <p class="napomena">
+          Prikaz je okviran — konačan otisak zavisi od izabrane vrste štampe i
+          njenih maksimalnih dimenzija.
+        </p>
+      </div>
+
+      <!-- ================= PODEŠAVANJA ================= -->
+      <div>
+        <div class="polja">
+          <div class="polje">
+            <label for="pr-tekst">Tekst za štampu</label>
+            <input id="pr-tekst" name="pr-tekst" type="text" [(ngModel)]="tekst"
+                   maxlength="60" placeholder="npr. ETF Beograd 2026" />
+            <span class="napomena">Ostavite prazno ako štampate samo sličicu.</span>
+          </div>
+
+          <div class="polje">
+            <div class="fajl">
+              <label class="dugme-fajl" for="pr-slicica">Sličica za štampu</label>
+              <input id="pr-slicica" type="file" accept="image/jpeg,image/png,image/gif"
+                     (change)="izabranaSlicica($event)" />
+              <span class="napomena">{{ slicica?.name || 'JPG · PNG · GIF' }}</span>
+            </div>
+            @if (greske['printImage']) {
+              <span class="poruka-greske" role="alert">{{ greske['printImage'] }}</span>
+            }
+          </div>
+
+          <div class="par">
+            <div class="polje">
+              <label for="pr-boja">Boja</label>
+              <select id="pr-boja" name="pr-boja" [(ngModel)]="boja">
+                @for (b of proizvod.availableColors; track b) {
+                  <option [value]="b">{{ b }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="polje">
+              <label for="pr-kolicina">Količina (kom)</label>
+              <input id="pr-kolicina" name="pr-kolicina" type="number" min="1" step="1"
+                     [(ngModel)]="kolicina" [class.greska]="greske['quantity']" />
+              @if (greske['quantity']) {
+                <span class="poruka-greske" role="alert">{{ greske['quantity'] }}</span>
+              }
+            </div>
+          </div>
+
+          <div class="polje">
+            <label for="pr-usluga">Vrsta štampe</label>
+            <select id="pr-usluga" name="pr-usluga" [(ngModel)]="uslugaId">
+              <option value="">— bez posebne usluge štampe —</option>
+              @for (u of proizvod.printServices; track u._id) {
+                <option [value]="u._id">
+                  {{ u.printType }} (+{{ u.extraPricePerPiece }} RSD/kom)
+                </option>
+              }
+            </select>
+            @if (usluga) {
+              <span class="napomena">
+                Najveći otisak: {{ usluga.maxWidthMm }} × {{ usluga.maxHeightMm }} mm
+              </span>
+            }
+          </div>
+        </div>
+
+        <!-- ================= RAČUN ================= -->
+        <div class="racun">
+          <div class="red">
+            <span>Cena po komadu</span>
+            <span class="jednosir">{{ proizvod.unitPrice }} RSD</span>
+          </div>
+          @if (usluga) {
+            <div class="red">
+              <span>{{ usluga.printType }}</span>
+              <span class="jednosir">+ {{ usluga.extraPricePerPiece }} RSD</span>
+            </div>
+          }
+          <div class="red">
+            <span>Količina</span>
+            <span class="jednosir">× {{ kolicina || 0 }}</span>
+          </div>
+          <div class="red zbir">
+            <span>Ukupno</span>
+            <span class="jednosir">{{ ukupno }} RSD</span>
+          </div>
+        </div>
+
+        @if (!dovoljno) {
+          <p class="obavestenje lose" role="alert" style="margin-top: 16px">
+            Nema dovoljno proizvoda trenutno na stanju.
+          </p>
+        }
+
+        <!-- Tekst zadatka traži tačno ova tri dugmeta. -->
+        <div class="dugmad">
+          <button type="button" class="otisak" [disabled]="slanje || !dovoljno"
+                  (click)="dodajUKorpu()">
+            Dodaj u korpu
+          </button>
+          <button type="button" class="otisak tih" (click)="ponisti()">Poništi</button>
+          <button type="button" class="otisak tih" (click)="nazad()">Nazad</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="podnozje-lista">
+      <span class="sitno">{{ proizvod.printerName }} &middot; {{ proizvod.printerCity }}</span>
+      <span class="sitno">PH &middot; 05</span>
+    </div>
+  </div>
+}

@@ -37,4 +37,17 @@ export class CookieService {
   zapamcenaSlika(idProizvoda: string): string | null {
     return this.uzmi('ph_galerija_' + idProizvoda);
   }
+
+  /**
+   * Slika koja se prikazuje za proizvod: zapamćena iz galerije ako postoji,
+   * inače ona koju je štamparija postavila kao glavnu.
+   *
+   * Tekst zadatka kaže da izabrana slika „postaje zapamćena u kolačiću tog veb
+   * pregledača, kao trenutno glavna slika za taj proizvod" — dakle za proizvod,
+   * a ne samo za stranu sa detaljima. Zato isti izbor važi i u rezultatima
+   * pretrage i u TOP 5, a ne samo tamo gde je napravljen.
+   */
+  glavnaSlika(idProizvoda: string, podrazumevana: string): string {
+    return this.zapamcenaSlika(idProizvoda) ?? podrazumevana;
+  }
 }

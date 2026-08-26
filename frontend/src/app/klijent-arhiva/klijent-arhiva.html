@@ -1,0 +1,170 @@
+<div class="papir">
+  <span class="mark gl"></span>
+  <span class="mark gd"></span>
+  <span class="mark dl"></span>
+  <span class="mark dd"></span>
+
+  <div class="zaglavlje-lista">
+    <div>
+      <span class="nadnaslov">Isporučeno i primljeno</span>
+      <h1 class="naslov-lista">Arhiva proizvoda</h1>
+    </div>
+    <span class="znacka" style="color: var(--mastilo)">Proizvoda: {{ stavke.length }}</span>
+  </div>
+  <div class="crta"></div>
+
+  @if (poruka) {
+    <p class="obavestenje" role="status">{{ poruka }}</p>
+  }
+  @if (greska) {
+    <p class="obavestenje lose" role="alert">{{ greska }}</p>
+  }
+
+  @if (ucitavanje) {
+    <p class="napomena">Učitavanje...</p>
+  } @else if (!stavke.length) {
+    <p class="obavestenje">
+      Arhiva je prazna. Ovde se pojavljuju proizvodi iz narudžbina koje su
+      isporučene ili primljene.
+    </p>
+    <div class="akcije">
+      <a routerLink="/klijent/narudzbine" class="otisak veza">Moje narudžbine</a>
+    </div>
+  } @else {
+    <div class="tabela-okvir">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 56px"></th>
+            <!-- Tekst zadatka traži sortiranje po ova četiri načina. -->
+            <th class="sortiraj" (click)="sortiraj('name')">Proizvod{{ strelica('name') }}</th>
+            <th class="sortiraj" (click)="sortiraj('quantity')">Količina{{ strelica('quantity') }}</th>
+            <th class="sortiraj" (click)="sortiraj('printer')">Štamparija{{ strelica('printer') }}</th>
+            <th>Faktura</th>
+            <th class="sortiraj" (click)="sortiraj('date')">Naručeno{{ strelica('date') }}</th>
+            <th>Status</th>
+            <th style="width: 170px">Akcija</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (stavka of stavke; track stavka.itemId) {
+            <tr>
+              <td>
+                <div class="pregled">
+                  @if (stavka.printImage) {
+                    <img [src]="slika(stavka.printImage)" alt="Otisak" />
+                  } @else if (stavka.printText) {
+                    <span class="tekst">{{ stavka.printText }}</span>
+                  } @else {
+                    <span class="tekst prazno">—</span>
+                  }
+                </div>
+              </td>
+              <td>
+                {{ stavka.name }}<br />
+                <span class="sitno">
+                  {{ stavka.code }} &middot; boja: {{ stavka.color }}
+                  @if (stavka.printType) { &middot; {{ stavka.printType }} }
+                </span>
+              </td>
+              <td class="jednosir">{{ stavka.quantity }}</td>
+              <td>
+                {{ stavka.printerName }}<br />
+                <span class="sitno">{{ stavka.printerCity }}</span>
+              </td>
+              <td class="jednosir">
+                {{ stavka.invoiceNumber }}<br />
+                <span class="sitno">{{ stavka.lineTotal | number: '1.0-2' }} RSD</span>
+              </td>
+              <td class="prigusen">{{ stavka.invoiceDate | date: 'dd.MM.yyyy.' }}</td>
+              <td>
+                <span class="znacka"
+                      [style.color]="stavka.invoiceStatus === 'RECEIVED' ? '#1F7A4C' : 'var(--cijan)'">
+                  {{ stavka.invoiceStatus === 'RECEIVED' ? 'primljeno' : 'isporučeno' }}
+                </span>
+              </td>
+              <td>
+                <div class="dugmad">
+                  @if (stavka.invoiceStatus === 'DELIVERED') {
+                    <button type="button" class="otisak tamni mali"
+                            [disabled]="slanje === stavka.invoiceId"
+                            (click)="potvrdiPrijem(stavka)">
+                      Primljeno
+                    </button>
+                  } @else {
+                    <button type="button" class="otisak obrnuti mali"
+                            (click)="otvoriOcenu(stavka)">
+                      {{ stavka.myRating ? 'Izmeni ocenu' : 'Oceni' }}
+                    </button>
+                  }
+                </div>
+
+                @if (stavka.myRating) {
+                  <span class="sitno" style="display: block; margin-top: 6px">
+                    {{ stavka.myRating.value === 1 ? '▲ sviđa mi se' : '▼ ne sviđa mi se' }}
+                  </span>
+                }
+              </td>
+            </tr>
+
+            <!-- ============ OCENA I KOMENTAR ============ -->
+            @if (uOceni === stavka.itemId) {
+              <tr>
+                <td colspan="8" class="red-forme">
+                  <div class="odeljak" style="margin-top: 0">
+                    <span class="broj">01</span>
+                    <span class="tekst">Ocena za {{ stavka.name }}</span>
+                    <span class="linija"></span>
+                  </div>
+
+                  <div class="izbor-ocene">
+                    <!--
+                      Sviđanje ili nesviđanje — tekst zadatka traži tačno dve
+                      mogućnosti, pa su i ovde dva dugmeta, ne skala.
+                    -->
+                    <button type="button" class="ocena-dugme dobra" [class.izabrano]="ocena === 1"
+                            (click)="ocena = 1">
+                      ▲ Sviđa mi se
+                    </button>
+                    <button type="button" class="ocena-dugme losa" [class.izabrano]="ocena === -1"
+                            (click)="ocena = -1">
+                      ▼ Ne sviđa mi se
+                    </button>
+                  </div>
+
+                  <div class="polje" style="margin-top: 18px">
+                    <label [attr.for]="'kom-' + stavka.itemId">Komentar</label>
+                    <input [id]="'kom-' + stavka.itemId" name="komentar" type="text"
+                           maxlength="600" [(ngModel)]="komentar"
+                           placeholder="Kako ste zadovoljni proizvodom?" />
+                    <span class="napomena">
+                      Komentar je opcion — možete ostaviti samo ocenu.
+                      Vidljiv je svim klijentima na strani sa detaljima proizvoda.
+                    </span>
+                  </div>
+
+                  <div class="dugmad" style="margin-top: 18px">
+                    <button type="button" class="otisak mali" [disabled]="slanje === stavka.itemId"
+                            (click)="posaljiOcenu(stavka)">
+                      Sačuvaj ocenu
+                    </button>
+                    <button type="button" class="otisak tih" (click)="zatvoriOcenu()">
+                      Odustani
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <div class="podnozje-lista">
+    <span class="sitno">
+      Ocenjuju se samo primljeni proizvodi. Prijem se potvrđuje za celu narudžbinu.
+    </span>
+    <span class="sitno">PH &middot; arhiva</span>
+  </div>
+</div>

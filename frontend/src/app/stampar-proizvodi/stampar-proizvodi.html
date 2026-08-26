@@ -1,0 +1,191 @@
+<div class="papir">
+  <span class="mark gl"></span>
+  <span class="mark gd"></span>
+  <span class="mark dl"></span>
+  <span class="mark dd"></span>
+
+  <div class="zaglavlje-lista">
+    <div>
+      <span class="nadnaslov">Lager lista &middot; moja štamparija</span>
+      <h1 class="naslov-lista">Proizvodi i usluge</h1>
+    </div>
+    <div class="dugmad">
+      <a routerLink="/stampar/novi-proizvod" class="otisak tamni mali veza">Novi proizvod</a>
+      <a routerLink="/stampar/uvoz" class="otisak obrnuti mali veza">Uvoz iz JSON fajla</a>
+    </div>
+  </div>
+  <div class="crta"></div>
+
+  @if (poruka) {
+    <p class="obavestenje" role="status">{{ poruka }}</p>
+  }
+  @if (greska) {
+    <p class="obavestenje lose" role="alert">{{ greska }}</p>
+  }
+
+  @if (ucitavanje) {
+    <p class="napomena">Učitavanje...</p>
+  } @else if (!proizvodi.length) {
+    <p class="obavestenje">
+      Još nemate nijedan proizvod. Dodajte ga pojedinačno ili uvezite lager listu iz JSON fajla.
+    </p>
+  } @else {
+    <div class="tabela-okvir">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 56px"></th>
+            <th>Šifra</th>
+            <th>Naziv</th>
+            <th>Kategorija</th>
+            <th>Cena</th>
+            <th>Na stanju</th>
+            <th>Usluge</th>
+            <th style="width: 180px">Akcija</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (proizvod of proizvodi; track proizvod._id) {
+            <tr>
+              <td>
+                <img [src]="slika(proizvod.mainImage)" [alt]="proizvod.name"
+                     width="40" height="40" class="minijatura" />
+              </td>
+              <td class="jednosir">{{ proizvod.code }}</td>
+              <td>
+                {{ proizvod.name }}
+                @if (proizvod.availableColors.length) {
+                  <br /><span class="sitno">{{ proizvod.availableColors.join(', ') }}</span>
+                }
+              </td>
+              <td class="prigusen">
+                {{ proizvod.categoryName }}
+                @if (proizvod.subcategoryName) {
+                  <br /><span class="sitno">{{ proizvod.subcategoryName }}</span>
+                }
+              </td>
+              <td class="jednosir">{{ proizvod.unitPrice | number: '1.0-2' }} RSD</td>
+              <td>
+                <!-- Nula na stanju je istaknuta: takav proizvod se po tekstu
+                     zadatka uopšte ne pojavljuje u pretrazi. -->
+                <span class="znacka"
+                      [style.color]="proizvod.stock ? 'var(--mastilo)' : 'var(--crvena-zemlja)'">
+                  {{ proizvod.stock }}
+                </span>
+              </td>
+              <td class="prigusen">{{ proizvod.printServices.length }}</td>
+              <td>
+                <div class="dugmad">
+                  <button type="button" class="otisak tamni mali"
+                          (click)="otvoriIzmenu(proizvod)">
+                    Količina
+                  </button>
+                  <button type="button" class="otisak obrnuti mali"
+                          (click)="otvoriSlike(proizvod)">
+                    Slike
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- ============ IZMENA KOLIČINE ============ -->
+            @if (uIzmeni === proizvod._id) {
+              <tr>
+                <td colspan="8" class="red-forme">
+                  <form (ngSubmit)="sacuvajKolicinu(proizvod)">
+                    <div class="red-unosa">
+                      <div class="polje" style="max-width: 200px">
+                        <label [attr.for]="'kol-' + proizvod._id">
+                          Nova količina za „{{ proizvod.name }}"
+                        </label>
+                        <input [id]="'kol-' + proizvod._id" name="kolicina" type="number"
+                               min="0" step="1" [(ngModel)]="novaKolicina" />
+                      </div>
+                      <button type="submit" class="otisak mali" [disabled]="slanje">
+                        Sačuvaj
+                      </button>
+                      <button type="button" class="otisak tih" (click)="zatvoriIzmenu()">
+                        Odustani
+                      </button>
+                    </div>
+                  </form>
+                </td>
+              </tr>
+            }
+
+            <!-- ============ SLIKE ============ -->
+            @if (uSlikama === proizvod._id) {
+              <tr>
+                <td colspan="8" class="red-forme">
+                  <div class="odeljak" style="margin-top: 0">
+                    <span class="broj">01</span>
+                    <span class="tekst">Slike za {{ proizvod.name }}</span>
+                    <span class="linija"></span>
+                  </div>
+
+                  <div class="galerija-sada">
+                    @for (putanja of [proizvod.mainImage].concat(proizvod.additionalImages); track putanja) {
+                      <img [src]="slika(putanja)" [alt]="proizvod.name" class="minijatura krupna" />
+                    }
+                  </div>
+
+                  <div class="polja" style="margin-top: 18px">
+                    <div class="polje">
+                      <div class="fajl">
+                        <label class="dugme-fajl" [attr.for]="'gl-' + proizvod._id">
+                          Glavna slika
+                        </label>
+                        <input [id]="'gl-' + proizvod._id" type="file"
+                               accept="image/jpeg,image/png,image/gif"
+                               (change)="izabranaGlavna($event)" />
+                        <span class="napomena">
+                          {{ glavnaSlika?.name || 'Zamenjuje trenutnu glavnu sliku' }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="polje">
+                      <div class="fajl">
+                        <label class="dugme-fajl" [attr.for]="'dod-' + proizvod._id">
+                          Dodatne slike
+                        </label>
+                        <input [id]="'dod-' + proizvod._id" type="file" multiple
+                               accept="image/jpeg,image/png,image/gif"
+                               (change)="izabraneDodatne($event)" />
+                        <span class="napomena">
+                          Galerija prima najviše 3 dodatne slike &middot;
+                          slobodno mesta: {{ slobodnihMesta(proizvod) }}
+                        </span>
+                      </div>
+                    </div>
+
+                    @if (greskaSlika) {
+                      <span class="poruka-greske" role="alert">{{ greskaSlika }}</span>
+                    }
+                  </div>
+
+                  <div class="dugmad" style="margin-top: 18px">
+                    <button type="button" class="otisak mali" [disabled]="slanjeSlika"
+                            (click)="posaljiSlike(proizvod)">
+                      Sačuvaj slike
+                    </button>
+                    <button type="button" class="otisak tih" (click)="zatvoriSlike()">
+                      Odustani
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="podnozje-lista">
+      <span class="sitno">
+        Proizvoda: {{ proizvodi.length }} &middot; bez zaliha: {{ bezZaliha }}
+      </span>
+      <span class="sitno">Proizvod bez zaliha se ne pojavljuje u pretrazi.</span>
+    </div>
+  }
+</div>

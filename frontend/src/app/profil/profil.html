@@ -1,0 +1,215 @@
+@if (ucitavanje) {
+  <p class="obavestenje tamno">Učitavanje...</p>
+}
+
+@if (korisnik) {
+  <div class="papir">
+    <span class="mark gl"></span>
+    <span class="mark gd"></span>
+    <span class="mark dl"></span>
+    <span class="mark dd"></span>
+
+    <div class="zaglavlje-lista">
+      <div>
+        <span class="nadnaslov">Karton korisnika &middot; {{ nazivTipa }}</span>
+        <h1 class="naslov-lista">Moj profil</h1>
+      </div>
+      <span class="znacka" style="color: var(--mastilo)">{{ korisnik.username }}</span>
+    </div>
+    <div class="crta"></div>
+
+    @if (uspeh) {
+      <p class="obavestenje" role="status">{{ uspeh }}</p>
+    }
+    @if (poruka) {
+      <p class="obavestenje lose" role="alert">{{ poruka }}</p>
+    }
+
+    <!-- ================= PROFILNA SLIKA ================= -->
+    <div class="odeljak" style="margin-top: 0">
+      <span class="broj">I</span>
+      <span class="tekst">Profilna slika</span>
+      <span class="linija"></span>
+    </div>
+
+    <div class="slika-red">
+      <img class="profilna" [src]="slika(korisnik.profileImage)" alt="Profilna slika" />
+
+      <div class="slika-desno">
+        <div class="fajl">
+          <label class="dugme-fajl" for="p-slika">Izaberi novu</label>
+          <input id="p-slika" type="file" accept="image/jpeg,image/png,image/gif"
+                 (change)="izabranaSlika($event)" />
+          <span class="napomena">
+            {{ imeSlike || 'JPG · PNG · GIF, od 100×100 do 250×250 px' }}
+          </span>
+        </div>
+
+        @if (greske['profileImage']) {
+          <span class="poruka-greske" role="alert">{{ greske['profileImage'] }}</span>
+        }
+
+        @if (novaSlika) {
+          <button type="button" class="otisak tamni mali" style="margin-top: 12px"
+                  [disabled]="slanjeSlike" (click)="posaljiSliku()">
+            Sačuvaj sliku
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- ================= PODACI ================= -->
+    <form (ngSubmit)="sacuvaj()">
+
+      <div class="odeljak">
+        <span class="broj">II</span>
+        <span class="tekst">{{ naslovDrugogOdeljka }}</span>
+        <span class="linija"></span>
+      </div>
+
+      <div class="polja">
+        <div class="par">
+          <div class="polje">
+            <label for="p-korisnicko">Korisničko ime</label>
+            <!--
+              Tekst zadatka izričito zabranjuje promenu korisničkog imena. Polje
+              je zato onemogućeno, a server ga ni ne čita iz zahteva - da bi
+              zabrana važila i kada se zahtev pošalje mimo ove forme.
+            -->
+            <input id="p-korisnicko" name="p-korisnicko" type="text"
+                   [value]="korisnik.username" disabled />
+            <span class="napomena">Korisničko ime se ne može menjati.</span>
+          </div>
+
+          <div class="polje">
+            <label for="p-email">I-mejl adresa</label>
+            <input id="p-email" name="p-email" type="email"
+                   [(ngModel)]="email" [class.greska]="greske['email']" />
+            @if (greske['email']) {
+              <span class="poruka-greske" role="alert">{{ greske['email'] }}</span>
+            }
+          </div>
+        </div>
+
+        <div class="par">
+          <div class="polje">
+            <label for="p-ime">Ime</label>
+            <input id="p-ime" name="p-ime" type="text"
+                   [(ngModel)]="ime" [class.greska]="greske['firstName']" />
+            @if (greske['firstName']) {
+              <span class="poruka-greske" role="alert">{{ greske['firstName'] }}</span>
+            }
+          </div>
+
+          <div class="polje">
+            <label for="p-prezime">Prezime</label>
+            <input id="p-prezime" name="p-prezime" type="text"
+                   [(ngModel)]="prezime" [class.greska]="greske['lastName']" />
+            @if (greske['lastName']) {
+              <span class="poruka-greske" role="alert">{{ greske['lastName'] }}</span>
+            }
+          </div>
+        </div>
+
+        <div class="polje">
+          <label for="p-telefon">Kontakt telefon</label>
+          <input id="p-telefon" name="p-telefon" type="text"
+                 [(ngModel)]="telefon" [class.greska]="greske['phone']" />
+          @if (greske['phone']) {
+            <span class="poruka-greske" role="alert">{{ greske['phone'] }}</span>
+          }
+        </div>
+      </div>
+
+      <!-- Institucija postoji samo za pravno lice i štampariju. -->
+      @if (jeInstitucija) {
+        <div>
+          <div class="odeljak">
+            <span class="broj">III</span>
+            <span class="tekst">Podaci o instituciji</span>
+            <span class="linija"></span>
+          </div>
+
+          <div class="polja">
+            <div class="polje">
+              <label for="p-naziv">Naziv institucije</label>
+              <input id="p-naziv" name="p-naziv" type="text"
+                     [(ngModel)]="nazivInstitucije" [class.greska]="greske['institutionName']" />
+              @if (greske['institutionName']) {
+                <span class="poruka-greske" role="alert">{{ greske['institutionName'] }}</span>
+              }
+            </div>
+
+            <div class="par" style="grid-template-columns: 1.6fr 1fr">
+              <div class="polje">
+                <label for="p-adresa">Adresa sedišta</label>
+                <input id="p-adresa" name="p-adresa" type="text"
+                       [(ngModel)]="adresa" [class.greska]="greske['institutionAddress']" />
+                @if (greske['institutionAddress']) {
+                  <span class="poruka-greske" role="alert">{{ greske['institutionAddress'] }}</span>
+                }
+              </div>
+
+              <div class="polje">
+                <label for="p-grad">Grad</label>
+                <input id="p-grad" name="p-grad" type="text"
+                       [(ngModel)]="grad" [class.greska]="greske['institutionCity']" />
+                @if (greske['institutionCity']) {
+                  <span class="poruka-greske" role="alert">{{ greske['institutionCity'] }}</span>
+                }
+              </div>
+            </div>
+
+            <div class="par">
+              <div class="polje">
+                <label for="p-maticni">Matični broj</label>
+                <input id="p-maticni" name="p-maticni" type="text" maxlength="8"
+                       [(ngModel)]="maticniBroj" [class.greska]="greske['registrationNumber']" />
+                @if (greske['registrationNumber']) {
+                  <span class="poruka-greske" role="alert">{{ greske['registrationNumber'] }}</span>
+                }
+              </div>
+
+              <div class="polje">
+                <label for="p-pib">PIB</label>
+                <input id="p-pib" name="p-pib" type="text" maxlength="9"
+                       [(ngModel)]="pib" [class.greska]="greske['taxId']" />
+                @if (greske['taxId']) {
+                  <span class="poruka-greske" role="alert">{{ greske['taxId'] }}</span>
+                }
+              </div>
+            </div>
+
+            <!-- Koordinate unosi samo štampar - one hrane mapu na strani sa
+                 detaljima proizvoda, koju vidi prijavljen klijent. -->
+            @if (jeStampar) {
+              <div class="par">
+                <div class="polje">
+                  <label for="p-lat">Geografska širina</label>
+                  <input id="p-lat" name="p-lat" type="text" [(ngModel)]="lat"
+                         placeholder="npr. 44.8045" />
+                  <span class="napomena">Koristi se za mapu uz vaše proizvode.</span>
+                </div>
+
+                <div class="polje">
+                  <label for="p-lng">Geografska dužina</label>
+                  <input id="p-lng" name="p-lng" type="text" [(ngModel)]="lng"
+                         placeholder="npr. 20.4682" />
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <div class="akcije">
+        <button type="submit" class="otisak" [disabled]="slanje">Sačuvaj izmene</button>
+      </div>
+    </form>
+
+    <div class="podnozje-lista">
+      <span class="sitno">Nalog otvoren: {{ korisnik.createdAt | date: 'dd.MM.yyyy.' }}</span>
+      <span class="sitno">PH &middot; karton korisnika</span>
+    </div>
+  </div>
+}

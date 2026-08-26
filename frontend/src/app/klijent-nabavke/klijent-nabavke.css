@@ -1,0 +1,50 @@
+/* Javne nabavke: po jedna kartica za svaku, sa traženim proizvodima i ishodom. */
+
+.spisak { display: flex; flex-direction: column; gap: 22px; }
+
+.nabavka {
+  border: 1px dashed var(--papir-isprekidana);
+  padding: 18px 20px 20px;
+}
+
+.nabavka-vrh {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.broj-nabavke {
+  font-family: var(--pismo-oznaka);
+  font-size: 15px;
+  letter-spacing: .1em;
+  margin: 0 0 5px;
+}
+
+.stanje {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  text-align: right;
+}
+
+.dugmad { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+
+/* Ponuđeni proizvodi unutar reda tabele. */
+.redovi { margin: 0; padding-left: 16px; font-size: 14px; line-height: 1.45; }
+.redovi li { margin: 3px 0; }
+.redovi .sitno { display: block; }
+
+/* Pobednička ponuda — blago izdvojena, bez vike. */
+tr.pobednicka { background: rgba(31, 122, 76, .07); }
+tr.pobednicka td { border-bottom-color: #1F7A4C; }
+
+/* Link koji izgleda kao dugme — globalno podvlačenje mu ne treba. */
+.veza { display: inline-block; border-bottom: 0; }
+
+@media (max-width: 720px) {
+  .stanje { align-items: flex-start; text-align: left; }
+}

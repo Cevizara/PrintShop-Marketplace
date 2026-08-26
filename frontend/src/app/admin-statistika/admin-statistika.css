@@ -1,0 +1,145 @@
+/*
+  Grafikon je nacrtan kao SVG, pa se stilizuje CSS-om kao i sve ostalo -
+  boje linija dolaze iz komponente, jer ih ima onoliko koliko ima proizvoda.
+*/
+
+.grafikon-okvir {
+  border: 1px solid var(--papir-linija);
+  background: rgba(120, 110, 90, .03);
+  padding: 8px 6px 4px;
+  /* Na uskom ekranu grafikon se pomera vodoravno umesto da se sabije. */
+  overflow-x: auto;
+}
+
+.grafikon {
+  width: 100%;
+  min-width: 560px;
+  height: 340px;
+  display: block;
+}
+
+.mreza-linija { stroke: var(--papir-linija); stroke-width: 1; }
+
+/* Nula je granica između "više lajkova" i "više dislajkova", pa se ističe. */
+.nulta { stroke: var(--mastilo-blago); stroke-width: 1.5; stroke-dasharray: 4 3; }
+
+.oznaka-ose {
+  font-family: var(--pismo-oznaka);
+  font-size: 10px;
+  fill: var(--mastilo-blago);
+}
+
+.linija {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.tacka { stroke: var(--papir); stroke-width: 1.5; }
+
+.ispod-grafikona {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.dugmad { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+
+/* legenda je ujedno i prekidač za prikaz */
+.legenda {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px 20px;
+}
+
+.stavka-legende {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  padding: 7px 8px;
+  border: 1px solid transparent;
+  transition: border-color 140ms ease, opacity 140ms ease;
+}
+.stavka-legende:hover { border-color: var(--papir-linija); }
+
+/* Isključen proizvod ostaje čitljiv, samo utišan - da se vidi da postoji. */
+.stavka-legende.iskljucena { opacity: .45; }
+
+.stavka-legende input { margin: 3px 0 0; accent-color: var(--magenta); }
+
+.boja {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  flex: none;
+  margin-top: 2px;
+}
+
+.stavka-legende .ime { font-size: 14px; line-height: 1.35; }
+.stavka-legende .sitno { display: block; margin-top: 2px; }
+
+@media (max-width: 720px) {
+  .grafikon { height: 280px; }
+  .dugmad .otisak { flex: 1; }
+}
+
+/* ---------- 1. stubičasti: promet štamparija ---------- */
+
+.stubici { display: flex; flex-direction: column; gap: 12px; }
+
+/*
+  Ime levo, traka u sredini, iznos desno. Trake dele istu skalu — najveći
+  promet je puna širina — pa se odnosi čitaju poređenjem dužina.
+*/
+.stubic-red {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr) 130px;
+  gap: 16px;
+  align-items: center;
+}
+
+.stubic-ime { font-size: 14px; line-height: 1.3; }
+.stubic-ime .sitno { display: block; margin-top: 2px; }
+
+.stubic-traka {
+  height: 26px;
+  background: rgba(120, 110, 90, .08);
+  border: 1px solid var(--papir-linija);
+}
+
+.stubic {
+  height: 100%;
+  transition: width 400ms cubic-bezier(.22, .61, .36, 1);
+}
+
+.stubic-iznos { text-align: right; font-size: 14px; }
+
+/* ---------- 2. pita: najčešće naručivani ---------- */
+
+.pita-okvir {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.pita { width: 220px; height: 220px; flex: none; }
+
+.pita-legenda {
+  flex: 1;
+  min-width: 240px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 8px 20px;
+}
+
+@media (max-width: 720px) {
+  .stubic-red { grid-template-columns: 1fr; gap: 6px; }
+  .stubic-iznos { text-align: left; }
+  .pita-okvir { gap: 20px; }
+}

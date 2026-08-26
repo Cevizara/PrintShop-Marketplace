@@ -1,0 +1,211 @@
+<div class="papir">
+  <span class="mark gl"></span>
+  <span class="mark gd"></span>
+  <span class="mark dl"></span>
+  <span class="mark dd"></span>
+
+  <div class="zaglavlje-lista">
+    <div>
+      <span class="nadnaslov">Izveštaji o poslovanju</span>
+      <h1 class="naslov-lista">Statistika</h1>
+    </div>
+  </div>
+  <div class="crta"></div>
+
+  @if (greska) {
+    <p class="obavestenje lose" role="alert">{{ greska }}</p>
+  }
+
+  <!-- ================= 1. PROMET ŠTAMPARIJA ================= -->
+  <div class="odeljak" style="margin-top: 0">
+    <span class="broj">01</span>
+    <span class="tekst">Promet štamparija u poslednjem kvartalu</span>
+    <span class="linija"></span>
+  </div>
+
+  @if (!promet.length) {
+    <p class="napomena">U poslednja tri meseca nema evidentiranog prometa.</p>
+  } @else {
+    <!--
+      Stubičasti grafikon. Spisak je opadajući — tako traži tekst zadatka — a
+      sortira ga server, pa strana samo crta. Otkazane narudžbine ne ulaze.
+    -->
+    <div class="stubici">
+      @for (stamparija of promet; track stamparija.printerId; let i = $index) {
+        <div class="stubic-red">
+          <div class="stubic-ime">
+            {{ stamparija.name }}
+            <span class="sitno">{{ stamparija.city }} &middot; faktura: {{ stamparija.invoiceCount }}</span>
+          </div>
+          <div class="stubic-traka">
+            <div class="stubic"
+                 [style.width.%]="duzinaStubica(stamparija.total)"
+                 [style.background]="bojaStubica(i)"></div>
+          </div>
+          <div class="stubic-iznos jednosir">
+            {{ stamparija.total | number: '1.0-0' }} RSD
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="podnozje-lista" style="margin-top: 14px">
+      <span class="sitno">Ukupan promet u kvartalu: {{ ukupanPromet | number: '1.0-0' }} RSD</span>
+      <span class="sitno">Otkazane narudžbine se ne računaju.</span>
+    </div>
+  }
+
+  <!-- ================= 2. NAJČEŠĆE NARUČIVANI ================= -->
+  <div class="odeljak">
+    <span class="broj">02</span>
+    <span class="tekst">Najčešće naručivani proizvodi u poslednjih mesec dana</span>
+    <span class="linija"></span>
+  </div>
+
+  @if (!proizvodi.length) {
+    <p class="napomena">U poslednjih mesec dana nema naručenih proizvoda.</p>
+  } @else {
+    <div class="pita-okvir">
+      <svg class="pita" viewBox="0 0 220 220" role="img"
+           aria-label="Pita grafikon udela najčešće naručivanih proizvoda">
+        @for (parce of parcad; track parce.name) {
+          <path [attr.d]="parce.putanja" [attr.fill]="parce.boja"
+                stroke="#FBF9F4" stroke-width="1.5">
+            <title>{{ parce.name }} — {{ parce.quantity }} kom ({{ parce.share }}%)</title>
+          </path>
+        }
+      </svg>
+
+      <div class="pita-legenda">
+        @for (parce of parcad; track parce.name) {
+          <div class="stavka-legende">
+            <span class="boja" [style.background]="parce.boja"></span>
+            <span class="ime">
+              {{ parce.name }}
+              <span class="sitno">{{ parce.quantity }} kom &middot; {{ parce.share }}%</span>
+            </span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="podnozje-lista" style="margin-top: 14px">
+      <span class="sitno">Ukupno komada u periodu: {{ ukupnoKomada | number: '1.0-0' }}</span>
+      <span class="sitno">Udeo se računa po količini, ne po broju faktura.</span>
+    </div>
+  }
+
+  <!-- ================= 3. KRETANJE OCENE ================= -->
+  <div class="odeljak">
+    <span class="broj">03</span>
+    <span class="tekst">Kretanje ocene proizvoda kroz vreme</span>
+    <span class="linija"></span>
+  </div>
+
+  @if (ucitavanje) {
+    <p class="napomena">Učitavanje...</p>
+  } @else if (!sirovi.length) {
+    <p class="obavestenje">Još nema nijedne ocene, pa nema šta da se prikaže.</p>
+  } @else {
+
+    <!-- ================= GRAFIKON ================= -->
+    @if (imaSta) {
+      <div class="grafikon-okvir">
+        <svg class="grafikon" [attr.viewBox]="'0 0 ' + SIRINA + ' ' + VISINA"
+             preserveAspectRatio="none"
+             role="img"
+             aria-label="Linijski grafikon kretanja ocene proizvoda kroz vreme">
+
+          <!-- vodoravna mreža sa vrednostima zbira -->
+          @for (linija of mreza; track linija.y) {
+            <line class="mreza-linija"
+                  [attr.x1]="MARGINA.levo" [attr.y1]="linija.y"
+                  [attr.x2]="SIRINA - MARGINA.desno" [attr.y2]="linija.y" />
+            <text class="oznaka-ose"
+                  [attr.x]="MARGINA.levo - 8" [attr.y]="linija.y + 4"
+                  text-anchor="end">{{ linija.oznaka }}</text>
+          }
+
+          <!-- nulta linija je deblja: iznad nje proizvod ima više lajkova
+               nego dislajkova, ispod obrnuto -->
+          @for (linija of mreza; track linija.oznaka) {
+            @if (linija.oznaka === 0) {
+              <line class="nulta"
+                    [attr.x1]="MARGINA.levo" [attr.y1]="linija.y"
+                    [attr.x2]="SIRINA - MARGINA.desno" [attr.y2]="linija.y" />
+            }
+          }
+
+          <!-- po jedna izlomljena linija za svaki prikazani proizvod -->
+          @for (linija of linije; track linija.productId) {
+            @if (linija.tacke.length > 1) {
+              <polyline class="linija" [attr.points]="linija.putanja"
+                        [attr.stroke]="linija.boja" />
+            }
+            @for (tacka of linija.tacke; track $index) {
+              <circle class="tacka" [attr.cx]="tacka.x" [attr.cy]="tacka.y" r="3.5"
+                      [attr.fill]="linija.boja">
+                <title>{{ linija.naziv }} — zbir {{ tacka.zbir }}</title>
+              </circle>
+            }
+          }
+        </svg>
+      </div>
+
+      @if (granicniDatumi) {
+        <div class="ispod-grafikona">
+          <span class="sitno">{{ granicniDatumi.od | date: 'dd.MM.yyyy.' }}</span>
+          <span class="sitno">
+            Zbir ocena: svaki lajk podiže liniju za jedan, dislajk je spušta.
+          </span>
+          <span class="sitno">{{ granicniDatumi.do | date: 'dd.MM.yyyy.' }}</span>
+        </div>
+      }
+    } @else {
+      <p class="obavestenje">
+        Nijedan proizvod nije izabran za prikaz. Uključite bar jedan iz liste ispod.
+      </p>
+    }
+
+    <!-- ================= IZBOR PROIZVODA ================= -->
+    <div class="odeljak">
+      <span class="broj">03a</span>
+      <span class="tekst">Proizvodi u prikazu</span>
+      <span class="linija"></span>
+    </div>
+
+    <div class="dugmad">
+      <button type="button" class="otisak tih" (click)="prikaziSve()">Prikaži sve</button>
+      <button type="button" class="otisak tih" (click)="sakrijSve()">Sakrij sve</button>
+    </div>
+
+    <!--
+      Tekst zadatka traži mogućnost da se određeni proizvodi isključe iz prikaza.
+      Isključivanje se radi ovde, bez novog poziva ka serveru - server je poslao
+      sve ocene, a računanje linije je posao ove strane.
+    -->
+    <div class="legenda">
+      @for (proizvod of sirovi; track proizvod.productId) {
+        <label class="stavka-legende" [class.iskljucena]="!prikazan(proizvod.productId)">
+          <input type="checkbox"
+                 [checked]="prikazan(proizvod.productId)"
+                 (change)="prebaci(proizvod.productId)" />
+          <span class="boja" [style.background]="bojaProizvoda(proizvod.productId)"></span>
+          <span class="ime">
+            {{ proizvod.name }}
+            <span class="sitno">
+              {{ proizvod.categoryName }} &middot; ocena: {{ proizvod.points.length }}
+            </span>
+          </span>
+        </label>
+      }
+    </div>
+  }
+
+  <div class="podnozje-lista">
+    <span class="sitno">
+      Svi grafikoni su crtani kao SVG, bez biblioteke — ocena u prikazu: {{ brojOcena }}.
+    </span>
+    <span class="sitno">PH &middot; statistika</span>
+  </div>
+</div>

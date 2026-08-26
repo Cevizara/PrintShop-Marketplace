@@ -1,0 +1,125 @@
+<div class="papir">
+  <span class="mark gl"></span>
+  <span class="mark gd"></span>
+  <span class="mark dl"></span>
+  <span class="mark dd"></span>
+
+  <div class="zaglavlje-lista">
+    <div>
+      <span class="nadnaslov">Radni nalozi &middot; moja štamparija</span>
+      <h1 class="naslov-lista">Naručeni proizvodi</h1>
+    </div>
+    <span class="znacka" style="color: var(--mastilo)">Narudžbina: {{ narudzbine.length }}</span>
+  </div>
+  <div class="crta"></div>
+
+  @if (poruka) {
+    <p class="obavestenje" role="status">{{ poruka }}</p>
+  }
+  @if (greska) {
+    <p class="obavestenje lose" role="alert">{{ greska }}</p>
+  }
+
+  <div class="filter">
+    <div class="polje">
+      <label for="n-status">Status</label>
+      <select id="n-status" name="n-status" [(ngModel)]="status" (ngModelChange)="ucitaj()">
+        @for (s of statusi; track s.vrednost) {
+          <option [value]="s.vrednost">{{ s.naziv }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (ucitavanje) {
+    <p class="napomena" style="margin-top: 24px">Učitavanje...</p>
+  } @else if (!narudzbine.length) {
+    <p class="obavestenje" style="margin-top: 24px">
+      Nema narudžbina koje odgovaraju izabranom statusu.
+    </p>
+  } @else {
+    <div class="tabela-okvir" style="margin-top: 24px">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortiraj" (click)="sortiraj('number')">ID fakture{{ strelica('number') }}</th>
+            <th>Naručilac</th>
+            <th>Šta se štampa</th>
+            <th class="sortiraj" (click)="sortiraj('total')">Iznos{{ strelica('total') }}</th>
+            <th class="sortiraj" (click)="sortiraj('status')">Status{{ strelica('status') }}</th>
+            <th class="sortiraj" (click)="sortiraj('date')">Datum{{ strelica('date') }}</th>
+            <th style="width: 190px">Akcija</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (narudzbina of narudzbine; track narudzbina._id) {
+            <tr>
+              <td class="jednosir">{{ narudzbina.number }}</td>
+              <td>
+                {{ narudzbina.clientInstitution || narudzbina.clientName }}
+                <br /><span class="sitno">{{ narudzbina.clientUsername }}</span>
+              </td>
+
+              <!--
+                Štampar mora da vidi i pripremu: šta se štampa, u kojoj boji,
+                kojom vrstom štampe, i gde otisak stoji na proizvodu.
+              -->
+              <td>
+                <div class="stavke">
+                  @for (stavka of narudzbina.items; track stavka._id) {
+                    <div class="stavka">
+                      <div class="pregled">
+                        <img class="podloga" [src]="slika(stavka.printImage || '')" alt=""
+                             [class.prazna]="!stavka.printImage" />
+                        @if (stavka.printText) {
+                          <span class="tekst">{{ stavka.printText }}</span>
+                        }
+                      </div>
+                      <div>
+                        <strong>{{ stavka.name }}</strong> ({{ stavka.quantity }})
+                        <br /><span class="sitno">
+                          boja: {{ stavka.color }}@if (stavka.printType) {, {{ stavka.printType }}}
+                        </span>
+                        @if (stavka.printText || stavka.printImage) {
+                          <br /><span class="sitno">
+                            otisak {{ stavka.printScale }}% na {{ stavka.printX }}/{{ stavka.printY }}
+                          </span>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </td>
+
+              <td class="jednosir">{{ narudzbina.total | number: '1.0-2' }} RSD</td>
+              <td>
+                <span class="znacka" [style.color]="bojaStatusa(narudzbina.status)">
+                  {{ nazivStatusa(narudzbina.status) }}
+                </span>
+              </td>
+              <td class="prigusen">{{ narudzbina.createdAt | date: 'dd.MM.yyyy.' }}</td>
+              <td>
+                @if (sledeciKorak(narudzbina)) {
+                  <button type="button" class="otisak tamni mali"
+                          [disabled]="slanje === narudzbina._id"
+                          (click)="pomeri(narudzbina)">
+                    {{ sledeciKorak(narudzbina) }}
+                  </button>
+                } @else {
+                  <span class="sitno">{{ objasnjenje(narudzbina) }}</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <div class="podnozje-lista">
+    <span class="sitno">
+      Štamparija pomera narudžbinu do „isporučeno" — prijem potvrđuje klijent.
+    </span>
+    <span class="sitno">PH &middot; radni nalozi</span>
+  </div>
+</div>

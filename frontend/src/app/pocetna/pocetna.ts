@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { PodaciPocetne, RezultatPretrage } from '../models/models';
 import { slikaUrl } from '../services/api';
+import { CookieService } from '../services/cookie.service';
 import { PublicService } from '../services/public.service';
 
 /**
@@ -18,6 +19,7 @@ import { PublicService } from '../services/public.service';
 })
 export class Pocetna implements OnInit {
   private servis = inject(PublicService);
+  private kolacici = inject(CookieService);
 
   podaci: PodaciPocetne | null = null;
   kategorije: string[] = [];
@@ -32,6 +34,15 @@ export class Pocetna implements OnInit {
   ucitavanje = false;
 
   slika = slikaUrl;
+
+  /**
+   * Slika proizvoda, uz poštovanje izbora iz galerije.
+   * Ako je posetilac na strani sa detaljima izabrao drugu sliku, ona je od tada
+   * glavna za taj proizvod — i ovde, ne samo tamo gde je izabrana.
+   */
+  slikaProizvoda(id: string, glavna: string): string {
+    return slikaUrl(this.kolacici.glavnaSlika(id, glavna));
+  }
 
   ngOnInit(): void {
     this.servis.pocetna().subscribe({

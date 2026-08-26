@@ -1,0 +1,247 @@
+<div class="papir">
+  <span class="mark gl"></span>
+  <span class="mark gd"></span>
+  <span class="mark dl"></span>
+  <span class="mark dd"></span>
+
+  <span class="nadnaslov">Obrazac 03 &middot; unos u lager listu</span>
+  <h1 class="naslov-lista">Novi proizvod</h1>
+  <div class="crta"></div>
+
+  @if (poruka) {
+    <p class="obavestenje lose" role="alert">{{ poruka }}</p>
+  }
+
+  <form (ngSubmit)="sacuvaj()">
+
+    <!-- ================= OSNOVNO ================= -->
+    <div class="odeljak" style="margin-top: 0">
+      <span class="broj">I</span>
+      <span class="tekst">Podaci o proizvodu</span>
+      <span class="linija"></span>
+    </div>
+
+    <div class="polja">
+      <div class="par" style="grid-template-columns: 1fr 2fr">
+        <div class="polje">
+          <label for="p-sifra">Šifra</label>
+          <input id="p-sifra" name="p-sifra" type="text" [(ngModel)]="sifra"
+                 [class.greska]="greske['code']" placeholder="npr. PR-011" />
+          @if (greske['code']) {
+            <span class="poruka-greske" role="alert">{{ greske['code'] }}</span>
+          } @else {
+            <span class="napomena">Jedinstvena u okviru vaše štamparije.</span>
+          }
+        </div>
+
+        <div class="polje">
+          <label for="p-naziv">Naziv proizvoda</label>
+          <input id="p-naziv" name="p-naziv" type="text" [(ngModel)]="naziv"
+                 [class.greska]="greske['name']" />
+          @if (greske['name']) {
+            <span class="poruka-greske" role="alert">{{ greske['name'] }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="polje">
+        <label for="p-opis">Opis</label>
+        <input id="p-opis" name="p-opis" type="text" [(ngModel)]="opis"
+               placeholder="kratak opis koji vidi prijavljeni klijent" />
+      </div>
+
+      <div class="par">
+        <div class="polje">
+          <label for="p-kategorija">Kategorija</label>
+          <select id="p-kategorija" name="p-kategorija" [(ngModel)]="kategorija"
+                  [class.greska]="greske['categoryName']"
+                  (ngModelChange)="promenjenaKategorija()">
+            <option value="">— izaberite —</option>
+            @for (k of kategorije; track k._id) {
+              <option [value]="k.name">{{ k.name }}</option>
+            }
+          </select>
+          @if (greske['categoryName']) {
+            <span class="poruka-greske" role="alert">{{ greske['categoryName'] }}</span>
+          }
+        </div>
+
+        <div class="polje">
+          <label for="p-potkategorija">Potkategorija</label>
+          <select id="p-potkategorija" name="p-potkategorija" [(ngModel)]="potkategorija"
+                  [disabled]="!potkategorije.length">
+            <option value="">— bez potkategorije —</option>
+            @for (p of potkategorije; track p) {
+              <option [value]="p">{{ p }}</option>
+            }
+          </select>
+          @if (!kategorija) {
+            <span class="napomena">Prvo izaberite kategoriju.</span>
+          }
+        </div>
+      </div>
+
+      <div class="par">
+        <div class="polje">
+          <label for="p-cena">Jedinična cena (RSD)</label>
+          <input id="p-cena" name="p-cena" type="number" min="0" step="0.01"
+                 [(ngModel)]="cena" [class.greska]="greske['unitPrice']" />
+          @if (greske['unitPrice']) {
+            <span class="poruka-greske" role="alert">{{ greske['unitPrice'] }}</span>
+          }
+        </div>
+
+        <div class="polje">
+          <label for="p-zalihe">Količina na lageru</label>
+          <input id="p-zalihe" name="p-zalihe" type="number" min="0" step="1"
+                 [(ngModel)]="zalihe" [class.greska]="greske['stock']" />
+          @if (greske['stock']) {
+            <span class="poruka-greske" role="alert">{{ greske['stock'] }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="polje">
+        <label for="p-boje">Dostupne boje</label>
+        <input id="p-boje" name="p-boje" type="text" [(ngModel)]="boje"
+               placeholder="Bela, Crna, Tamno plava" />
+        <span class="napomena">
+          Razdvojene zarezom. Ako ostavite prazno, podrazumeva se bela.
+        </span>
+      </div>
+    </div>
+
+    <!-- ================= USLUGE ŠTAMPE ================= -->
+    <div class="odeljak">
+      <span class="broj">II</span>
+      <span class="tekst">Usluge štampe</span>
+      <span class="linija"></span>
+    </div>
+
+    @if (usluge.length) {
+      <div class="tabela-okvir">
+        <table>
+          <thead>
+            <tr>
+              <th>Šifra</th>
+              <th>Tip štampe</th>
+              <th>Dodatna cena</th>
+              <th>Maks. dimenzije</th>
+              <th style="width: 90px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (usluga of usluge; track usluga.code; let i = $index) {
+              <tr>
+                <td class="jednosir">{{ usluga.code }}</td>
+                <td>{{ usluga.printType }}</td>
+                <td class="jednosir">{{ usluga.extraPricePerPiece }} RSD</td>
+                <td class="jednosir">{{ usluga.maxWidthMm }} × {{ usluga.maxHeightMm }} mm</td>
+                <td>
+                  <button type="button" class="otisak tih" (click)="ukloniUslugu(i)">
+                    Ukloni
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <p class="napomena">
+        Proizvod može biti i bez usluga štampe. Usluga povećava cenu po komadu i ima
+        maksimalne dimenzije otiska.
+      </p>
+    }
+
+    <div class="unos-usluge">
+      <div class="polje">
+        <label for="u-sifra">Šifra usluge</label>
+        <input id="u-sifra" name="u-sifra" type="text" [(ngModel)]="uSifra"
+               placeholder="USL-01" />
+      </div>
+
+      <div class="polje siroko">
+        <label for="u-tip">Tip štampe</label>
+        <input id="u-tip" name="u-tip" type="text" [(ngModel)]="uTip"
+               placeholder="npr. Direktna štampa na tekstil (DTG)" />
+      </div>
+
+      <div class="polje">
+        <label for="u-cena">Dodatna cena</label>
+        <input id="u-cena" name="u-cena" type="number" min="0" step="0.01" [(ngModel)]="uCena" />
+      </div>
+
+      <div class="polje">
+        <label for="u-sirina">Maks. širina (mm)</label>
+        <input id="u-sirina" name="u-sirina" type="number" min="1" step="1" [(ngModel)]="uSirina" />
+      </div>
+
+      <div class="polje">
+        <label for="u-visina">Maks. visina (mm)</label>
+        <input id="u-visina" name="u-visina" type="number" min="1" step="1" [(ngModel)]="uVisina" />
+      </div>
+
+      <button type="button" class="otisak tamni mali" (click)="dodajUslugu()">
+        Dodaj uslugu
+      </button>
+    </div>
+
+    @if (greskaUsluge) {
+      <span class="poruka-greske" role="alert">{{ greskaUsluge }}</span>
+    }
+
+    <!-- ================= SLIKE ================= -->
+    <div class="odeljak">
+      <span class="broj">III</span>
+      <span class="tekst">Slike proizvoda</span>
+      <span class="linija"></span>
+    </div>
+
+    <div class="polja">
+      <div class="polje">
+        <div class="fajl">
+          <label class="dugme-fajl" for="p-glavna">Glavna slika</label>
+          <input id="p-glavna" type="file" accept="image/jpeg,image/png,image/gif"
+                 (change)="izabranaGlavna($event)" />
+          <span class="napomena">
+            {{ glavnaSlika?.name || 'Bez slike proizvod dobija podrazumevanu.' }}
+          </span>
+        </div>
+        @if (greske['mainImage']) {
+          <span class="poruka-greske" role="alert">{{ greske['mainImage'] }}</span>
+        }
+      </div>
+
+      <div class="polje">
+        <div class="fajl">
+          <label class="dugme-fajl" for="p-dodatne">Galerija</label>
+          <input id="p-dodatne" type="file" multiple accept="image/jpeg,image/png,image/gif"
+                 (change)="izabraneDodatne($event)" />
+          <span class="napomena">
+            @if (dodatneSlike.length) {
+              Izabrano slika: {{ dodatneSlike.length }}
+            } @else {
+              Najviše 3 dodatne slike
+            }
+          </span>
+        </div>
+        @if (greske['additionalImages']) {
+          <span class="poruka-greske" role="alert">{{ greske['additionalImages'] }}</span>
+        }
+      </div>
+    </div>
+
+    <div class="akcije">
+      <button type="submit" class="otisak" [disabled]="slanje">Sačuvaj proizvod</button>
+      <span class="sitno">
+        <a routerLink="/stampar/proizvodi">← Nazad na lager listu</a>
+      </span>
+    </div>
+  </form>
+
+  <div class="podnozje-lista">
+    <span class="sitno">Kategorije se biraju iz baze — nove dodaje administrator.</span>
+    <span class="sitno">PH &middot; 03</span>
+  </div>
+</div>

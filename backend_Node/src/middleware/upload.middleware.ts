@@ -57,6 +57,31 @@ export const otpremiProfilnuSliku = napraviPrijemnik(FOLDERI.profil);
 export const otpremiSlikuProizvoda = napraviPrijemnik(FOLDERI.proizvod);
 export const otpremiSlikuZaStampu = napraviPrijemnik(FOLDERI.stampa);
 
+/**
+ * Prijemnik za JSON fajl sa lager listom (Prilog 1 teksta zadatka).
+ *
+ * Ovaj fajl se, za razliku od slika, NE cuva na disku: procita se, iz njega se
+ * naprave proizvodi, i vise nikom ne treba. Zato ide u memoriju - inace bi se
+ * u uploads/ gomilali fajlovi koje niko nikada ne otvara.
+ */
+export const otpremiJsonFajl = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (_zahtev, fajl, dalje) => {
+    // Neki pregledaci salju "application/json", neki "text/plain", a neki
+    // prazan tip - zato se gleda i nastavak imena fajla.
+    const jeJson =
+      fajl.mimetype === "application/json" ||
+      path.extname(fajl.originalname).toLowerCase() === ".json";
+
+    if (!jeJson) {
+      dalje(new Error("Očekuje se JSON fajl sa lager listom."));
+      return;
+    }
+    dalje(null, true);
+  },
+});
+
 export interface ProveraDimenzija {
   ispravno: boolean;
   poruka?: string;

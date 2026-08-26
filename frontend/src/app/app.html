@@ -1,32 +1,108 @@
 <div class="ljuska">
 
   <header class="zaglavlje">
-    <div class="znak">
-      <a routerLink="/" class="znak-ime">Printing House</a>
-      <span class="traka-cmyk">
-        <span style="background: var(--cijan)"></span>
-        <span style="background: var(--magenta)"></span>
-        <span style="background: var(--zuta)"></span>
-        <span style="background: var(--papir)"></span>
-      </span>
-    </div>
+    <!--
+      Znak: mašina iz koje izlazi list, isti motiv kao na strani za prijavu.
+      Crtan u SVG-u kao i sve ostalo — nema fajla koji se učitava, oštar je na
+      svakoj veličini, i boje mu dolaze iz istih promenljivih kao ostatak.
+    -->
+    <a routerLink="/" class="znak">
+      <svg class="znak-crtez" viewBox="0 0 40 40" aria-hidden="true">
+        <!-- telo mašine -->
+        <rect x="4" y="6" width="32" height="17" rx="3"
+              fill="var(--masina-sredina)" stroke="var(--masina-ivica)" stroke-width="1.2" />
+        <!-- rešetka za hlađenje -->
+        <g stroke="var(--masina-dno)" stroke-width="1.4" stroke-linecap="round">
+          <path d="M9 11h7M9 14h5" />
+        </g>
+        <!-- lampica -->
+        <circle cx="30" cy="12.5" r="2" fill="var(--cijan)" />
+        <!-- prorez -->
+        <rect x="8" y="21" width="24" height="2.6" rx="1.3" fill="var(--radionica)" />
+        <!-- list koji izlazi -->
+        <rect x="11" y="23" width="18" height="13" rx="1"
+              fill="var(--papir)" stroke="var(--papir-linija)" stroke-width="0.8" />
+        <!-- CMYK traka na listu -->
+        <g>
+          <rect x="14" y="32" width="3" height="2" fill="var(--cijan)" />
+          <rect x="17.5" y="32" width="3" height="2" fill="var(--magenta)" />
+          <rect x="21" y="32" width="3" height="2" fill="var(--zuta)" />
+          <rect x="24.5" y="32" width="3" height="2" fill="var(--mastilo)" />
+        </g>
+        <path d="M14 27h12M14 29.5h8" stroke="var(--papir-isprekidana)"
+              stroke-width="1" stroke-linecap="round" />
+      </svg>
 
+      <span class="znak-tekst">
+        <span class="znak-ime">Printing House</span>
+        <span class="traka-cmyk">
+          <span style="background: var(--cijan)"></span>
+          <span style="background: var(--magenta)"></span>
+          <span style="background: var(--zuta)"></span>
+          <span style="background: var(--papir)"></span>
+        </span>
+      </span>
+    </a>
+
+    <!--
+      Meni se sastavlja prema ulozi prijavljenog korisnika. Ovo je udobnost, ne
+      zaštita: skrivena stavka ne znači i zatvoren endpoint. Prava se proveraju
+      na serveru, na svakoj zaštićenoj ruti.
+    -->
     <nav class="meni">
       <a routerLink="/" routerLinkActive="aktivna" [routerLinkActiveOptions]="{ exact: true }">
         Početna
       </a>
 
       @if (!auth.prijavljen) {
-        <a routerLink="/pristup" routerLinkActive="aktivna">Prijava</a>
+        <a routerLink="/prijava" routerLinkActive="aktivna">Prijava</a>
         <a routerLink="/registracija" routerLinkActive="aktivna">Registracija</a>
+      }
+
+      @if (auth.jeTipa('CLIENT_INDIVIDUAL', 'CLIENT_COMPANY')) {
+        <a routerLink="/klijent/pretraga" routerLinkActive="aktivna">Pretraga</a>
+        <a routerLink="/klijent/narudzbine" routerLinkActive="aktivna">Narudžbine</a>
+        <a routerLink="/klijent/arhiva" routerLinkActive="aktivna">Arhiva</a>
+
+        <!--
+          Javne nabavke vidi SAMO pravno lice: ono iz korpe raspisuje licitaciju,
+          dok fizičko lice dobija fakture. To je cela razlika između ta dva tipa
+          klijenta, i zato četvrti tip korisnika uopšte postoji.
+        -->
+        @if (auth.jeTipa('CLIENT_COMPANY')) {
+          <a routerLink="/klijent/nabavke" routerLinkActive="aktivna">Javne nabavke</a>
+        }
+
+        <a routerLink="/klijent/korpa" routerLinkActive="aktivna">
+          Korpa
+          @if (korpa.brojStavki()) {
+            <span class="brojac-korpe">{{ korpa.brojStavki() }}</span>
+          }
+        </a>
+      }
+
+      @if (auth.jeTipa('PRINTER')) {
+        <a routerLink="/stampar/proizvodi" routerLinkActive="aktivna">Proizvodi</a>
+        <a routerLink="/stampar/narudzbine" routerLinkActive="aktivna">Narudžbine</a>
+        <a routerLink="/stampar/licitacije" routerLinkActive="aktivna">Licitacije</a>
       }
 
       @if (auth.jeTipa('ADMIN')) {
         <a routerLink="/admin/zahtevi" routerLinkActive="aktivna">Zahtevi</a>
+        <a routerLink="/admin/korisnici" routerLinkActive="aktivna">Nalozi</a>
+        <a routerLink="/admin/kategorije" routerLinkActive="aktivna">Kategorije</a>
+        <a routerLink="/admin/statistika" routerLinkActive="aktivna">Statistika</a>
       }
 
       @if (auth.prijavljen) {
-        <span>{{ auth.korisnik()?.username }}</span>
+        <!--
+          Korisničko ime JE link na profil. Ranije je stajalo kao mrtav tekst
+          pored zasebne stavke „Profil" — dve stavke za istu stranu, od kojih
+          jedna nije radila ništa.
+        -->
+        <a routerLink="/profil" routerLinkActive="aktivna" class="nalog">
+          {{ auth.korisnik()?.username }}
+        </a>
         <button type="button" class="otisak tih" (click)="odjava()">Izloguj se</button>
       }
     </nav>

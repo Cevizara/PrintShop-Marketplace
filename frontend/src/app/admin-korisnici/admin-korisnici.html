@@ -1,0 +1,297 @@
+<div class="papir">
+  <span class="mark gl"></span>
+  <span class="mark gd"></span>
+  <span class="mark dl"></span>
+  <span class="mark dd"></span>
+
+  <div class="zaglavlje-lista">
+    <div>
+      <span class="nadnaslov">Knjiga naloga &middot; svi korisnici</span>
+      <h1 class="naslov-lista">Upravljanje nalozima</h1>
+    </div>
+    <span class="znacka" style="color: var(--mastilo)">Ukupno: {{ korisnici.length }}</span>
+  </div>
+  <div class="crta"></div>
+
+  @if (poruka) {
+    <p class="obavestenje" role="status">{{ poruka }}</p>
+  }
+  @if (greska) {
+    <p class="obavestenje lose" role="alert">{{ greska }}</p>
+  }
+
+  <!-- ================= FILTER ================= -->
+  <form (ngSubmit)="ucitaj()">
+    <div class="filter">
+      <div class="polje">
+        <label for="k-pojam">Pretraga</label>
+        <input id="k-pojam" name="k-pojam" type="text" [(ngModel)]="pojam"
+               placeholder="ime, prezime, korisničko ime, i-mejl, institucija" />
+      </div>
+
+      <div class="polje">
+        <label for="k-tip">Tip</label>
+        <select id="k-tip" name="k-tip" [(ngModel)]="tip">
+          @for (t of tipovi; track t.vrednost) {
+            <option [value]="t.vrednost">{{ t.naziv }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="polje">
+        <label for="k-status">Status</label>
+        <select id="k-status" name="k-status" [(ngModel)]="status">
+          @for (s of statusi; track s.vrednost) {
+            <option [value]="s.vrednost">{{ s.naziv }}</option>
+          }
+        </select>
+      </div>
+
+      <button type="submit" class="otisak" [disabled]="ucitavanje">Prikaži</button>
+      <button type="button" class="otisak tih" (click)="ponisti()">Poništi</button>
+    </div>
+  </form>
+
+  <!-- ================= TABELA ================= -->
+  @if (ucitavanje) {
+    <p class="napomena" style="margin-top: 24px">Učitavanje...</p>
+  } @else if (!korisnici.length) {
+    <p class="obavestenje" style="margin-top: 24px">Nema naloga koji odgovaraju filteru.</p>
+  } @else {
+    <div class="tabela-okvir" style="margin-top: 24px">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 56px"></th>
+            <th>Korisničko ime</th>
+            <th>Tip</th>
+            <th>Ime i prezime</th>
+            <th>Kontakt</th>
+            <th>Institucija</th>
+            <th>Status</th>
+            <th style="width: 170px">Akcija</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (korisnik of korisnici; track korisnik._id) {
+            <tr>
+              <td>
+                <img [src]="slika(korisnik.profileImage)" alt="Profilna slika"
+                     width="40" height="40" class="minijatura" />
+              </td>
+              <td class="jednosir">{{ korisnik.username }}</td>
+              <td>
+                <span class="znacka" [style.color]="bojaTipa(korisnik.type)">
+                  {{ nazivTipa(korisnik.type) }}
+                </span>
+              </td>
+              <td>{{ korisnik.firstName }} {{ korisnik.lastName }}</td>
+              <td class="prigusen">{{ korisnik.email }}<br />{{ korisnik.phone }}</td>
+              <td class="prigusen">
+                @if (korisnik.institution) {
+                  {{ korisnik.institution.name }}<br />
+                  <span class="sitno">
+                    {{ korisnik.institution.city }} &middot;
+                    MB {{ korisnik.institution.registrationNumber }}
+                  </span>
+                } @else {
+                  &mdash;
+                }
+              </td>
+              <td>
+                <span class="znacka" [style.color]="bojaStatusa(korisnik.status)">
+                  {{ nazivStatusa(korisnik.status) }}
+                </span>
+              </td>
+              <td>
+                <div class="dugmad">
+                  <button type="button" class="otisak tamni mali"
+                          (click)="otvoriIzmenu(korisnik)">
+                    Izmeni
+                  </button>
+
+                  <!-- Nalog kojim je administrator prijavljen ne može da se
+                       obriše. Server to odbija i sam; ovde se dugme sklanja da
+                       korisnik ne kucne u zid. -->
+                  @if (!jeSopstveni(korisnik)) {
+                    <button type="button" class="otisak obrnuti mali"
+                            (click)="potvrdiBrisanje(korisnik)">
+                      Obriši
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+
+            <!-- ============ POTVRDA BRISANJA ============ -->
+            @if (zaBrisanje?._id === korisnik._id) {
+              <tr>
+                <td colspan="8" class="red-forme">
+                  <p class="obavestenje lose" style="margin: 0 0 14px">
+                    Brisanje naloga <strong>{{ korisnik.username }}</strong> je trajno.
+                    @if (korisnik.type === 'PRINTER') {
+                      <br />Uz nalog se brišu i svi proizvodi ove štamparije.
+                    }
+                  </p>
+                  <div class="dugmad">
+                    <button type="button" class="otisak mali" [disabled]="slanje"
+                            (click)="obrisi()">
+                      Da, obriši
+                    </button>
+                    <button type="button" class="otisak tih" (click)="odustaniOdBrisanja()">
+                      Odustani
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+
+            <!-- ============ IZMENA ============ -->
+            @if (uIzmeni?._id === korisnik._id) {
+              <tr>
+                <td colspan="8" class="red-forme">
+                  <form (ngSubmit)="sacuvaj()">
+                    <div class="odeljak" style="margin-top: 0">
+                      <span class="broj">01</span>
+                      <span class="tekst">Izmena naloga {{ korisnik.username }}</span>
+                      <span class="linija"></span>
+                    </div>
+
+                    <div class="polja">
+                      <div class="par">
+                        <div class="polje">
+                          <label [attr.for]="'i-ime-' + korisnik._id">Ime</label>
+                          <input [id]="'i-ime-' + korisnik._id" name="i-ime" type="text"
+                                 [(ngModel)]="izmena.firstName"
+                                 [class.greska]="greske['firstName']" />
+                          @if (greske['firstName']) {
+                            <span class="poruka-greske">{{ greske['firstName'] }}</span>
+                          }
+                        </div>
+
+                        <div class="polje">
+                          <label [attr.for]="'i-prezime-' + korisnik._id">Prezime</label>
+                          <input [id]="'i-prezime-' + korisnik._id" name="i-prezime" type="text"
+                                 [(ngModel)]="izmena.lastName"
+                                 [class.greska]="greske['lastName']" />
+                          @if (greske['lastName']) {
+                            <span class="poruka-greske">{{ greske['lastName'] }}</span>
+                          }
+                        </div>
+                      </div>
+
+                      <div class="par">
+                        <div class="polje">
+                          <label [attr.for]="'i-telefon-' + korisnik._id">Telefon</label>
+                          <input [id]="'i-telefon-' + korisnik._id" name="i-telefon" type="text"
+                                 [(ngModel)]="izmena.phone" [class.greska]="greske['phone']" />
+                          @if (greske['phone']) {
+                            <span class="poruka-greske">{{ greske['phone'] }}</span>
+                          }
+                        </div>
+
+                        <div class="polje">
+                          <label [attr.for]="'i-email-' + korisnik._id">I-mejl</label>
+                          <input [id]="'i-email-' + korisnik._id" name="i-email" type="email"
+                                 [(ngModel)]="izmena.email" [class.greska]="greske['email']" />
+                          @if (greske['email']) {
+                            <span class="poruka-greske">{{ greske['email'] }}</span>
+                          }
+                        </div>
+                      </div>
+
+                      @if (jeInstitucija(korisnik)) {
+                        <div class="polja">
+                          <div class="polje">
+                            <label [attr.for]="'i-naziv-' + korisnik._id">Naziv institucije</label>
+                            <input [id]="'i-naziv-' + korisnik._id" name="i-naziv" type="text"
+                                   [(ngModel)]="izmena.institutionName"
+                                   [class.greska]="greske['institutionName']" />
+                            @if (greske['institutionName']) {
+                              <span class="poruka-greske">{{ greske['institutionName'] }}</span>
+                            }
+                          </div>
+
+                          <div class="par" style="grid-template-columns: 1.6fr 1fr">
+                            <div class="polje">
+                              <label [attr.for]="'i-adresa-' + korisnik._id">Adresa</label>
+                              <input [id]="'i-adresa-' + korisnik._id" name="i-adresa" type="text"
+                                     [(ngModel)]="izmena.institutionAddress"
+                                     [class.greska]="greske['institutionAddress']" />
+                              @if (greske['institutionAddress']) {
+                                <span class="poruka-greske">{{ greske['institutionAddress'] }}</span>
+                              }
+                            </div>
+
+                            <div class="polje">
+                              <label [attr.for]="'i-grad-' + korisnik._id">Grad</label>
+                              <input [id]="'i-grad-' + korisnik._id" name="i-grad" type="text"
+                                     [(ngModel)]="izmena.institutionCity"
+                                     [class.greska]="greske['institutionCity']" />
+                              @if (greske['institutionCity']) {
+                                <span class="poruka-greske">{{ greske['institutionCity'] }}</span>
+                              }
+                            </div>
+                          </div>
+
+                          <div class="par">
+                            <div class="polje">
+                              <label [attr.for]="'i-mb-' + korisnik._id">Matični broj</label>
+                              <input [id]="'i-mb-' + korisnik._id" name="i-mb" type="text"
+                                     maxlength="8" [(ngModel)]="izmena.registrationNumber"
+                                     [class.greska]="greske['registrationNumber']" />
+                              @if (greske['registrationNumber']) {
+                                <span class="poruka-greske">{{ greske['registrationNumber'] }}</span>
+                              }
+                            </div>
+
+                            <div class="polje">
+                              <label [attr.for]="'i-pib-' + korisnik._id">PIB</label>
+                              <input [id]="'i-pib-' + korisnik._id" name="i-pib" type="text"
+                                     maxlength="9" [(ngModel)]="izmena.taxId"
+                                     [class.greska]="greske['taxId']" />
+                              @if (greske['taxId']) {
+                                <span class="poruka-greske">{{ greske['taxId'] }}</span>
+                              }
+                            </div>
+                          </div>
+                        </div>
+                      }
+
+                      <div class="polje" style="max-width: 260px">
+                        <label [attr.for]="'i-status-' + korisnik._id">Status naloga</label>
+                        <select [id]="'i-status-' + korisnik._id" name="i-status"
+                                [(ngModel)]="izmena.status">
+                          <option value="PENDING">Na čekanju</option>
+                          <option value="APPROVED">Odobren</option>
+                          <option value="REJECTED">Odbijen</option>
+                        </select>
+                        <span class="napomena">
+                          Odbijen nalog ne može da se prijavi na sistem.
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="dugmad" style="margin-top: 20px">
+                      <button type="submit" class="otisak mali" [disabled]="slanje">
+                        Sačuvaj
+                      </button>
+                      <button type="button" class="otisak tih" (click)="zatvoriIzmenu()">
+                        Odustani
+                      </button>
+                    </div>
+                  </form>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <div class="podnozje-lista">
+    <span class="sitno">Korisničko ime se ne može menjati ni sa administratorskog naloga.</span>
+    <span class="sitno">PH &middot; knjiga naloga</span>
+  </div>
+</div>

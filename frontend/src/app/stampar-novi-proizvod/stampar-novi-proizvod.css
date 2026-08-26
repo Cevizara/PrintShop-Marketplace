@@ -1,0 +1,20 @@
+/* Obrazac za unos proizvoda. Red za unos usluge je uži i gušći od ostatka. */
+
+.unos-usluge {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
+  gap: 14px;
+  align-items: end;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--papir-isprekidana);
+}
+
+/* Tip štampe je najduži podatak, pa dobija dve kolone. */
+.unos-usluge .siroko { grid-column: span 2; }
+
+@media (max-width: 900px) {
+  .unos-usluge { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .unos-usluge .siroko { grid-column: span 2; }
+  .unos-usluge .otisak { grid-column: span 2; width: 100%; }
+}

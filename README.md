@@ -66,7 +66,13 @@ Dostupna na **http://localhost:4200**.
 | `pera` … `vuk` | `Klijent1!` … `Klijent8!` | klijenti — fizička lica |
 | `etf` | `Pravno11!` | klijent — pravno lice |
 
-Nalozi `novastamparija` i `jelena` namerno čekaju odobrenje administratora.
+Nalozi `novastamparija` i `jelena` namerno čekaju odobrenje administratora, i
+namerno nemaju svoju profilnu sliku — tako se vidi i podrazumevana
+`default_profile_image.jpg`. Ostali nalozi imaju generisan avatar.
+
+Za probu uvoza lager liste iz JSON fajla poslužiće `primer-proizvodi.json` iz
+korena projekta (Prilog 1 teksta zadatka). Prijavite se kao `printnovi` — taj
+nalog nema šifre `PR-001` do `PR-003`, pa uvoz prolazi u celini.
 
 Prijava administratora je na **posebnoj ruti** `/admin/prijava` i nigde nije
 povezana linkom sa javnog dela sajta — tako traži tekst zadatka.
@@ -80,10 +86,24 @@ povezana linkom sa javnog dela sajta — tako traži tekst zadatka.
 | Prijava svih tipova korisnika | gotovo |
 | Registracija (fizičko lice, pravno lice, štamparija) | gotovo |
 | Zaboravljena lozinka (link važi 5 minuta) | gotovo |
-| Obrada zahteva za registraciju (administrator) | gotovo |
 | Javna početna: broj štamparija, TOP 5, pretraga | gotovo |
 | Detalji proizvoda sa galerijom | gotovo |
-| Ostatak klijentskog i štamparskog dela | predstoji |
+| Profil — prikaz i ažuriranje, za sve uloge | gotovo |
+| Klijent: pretraga i prošireni detalji proizvoda | gotovo |
+| Štampar: proizvodi i usluge, količine, uvoz iz JSON fajla | gotovo |
+| Administrator: zahtevi, nalozi, kategorije | gotovo |
+| Mapa štamparije u proširenim detaljima | gotovo |
+| Administrator: grafikon kretanja ocene kroz vreme | gotovo |
+| Priprema proizvoda, e-korpa, zatvaranje narudžbine | gotovo |
+| Tabela narudžbina, otkazivanje, promena statusa | gotovo |
+| Javne nabavke i licitacije | gotovo |
+| Ocene, komentari, arhiva proizvoda | gotovo |
+| PDF faktura na i-mejl, PDF izveštaj o licitacijama | gotovo |
+| Sva tri administratorska grafikona | gotovo |
+| Servis za plaćanje karticom | gotovo |
+
+Prijavljeni korisnik se otvara na strani koja je posao njegove uloge: klijent na
+pretrazi, štampar na lager listi, administrator na zahtevima.
 
 ---
 
@@ -114,3 +134,32 @@ Bez tog fajla aplikacija radi sa podrazumevanim vrednostima.
 
 `.env` se **ne čuva u repozitorijumu** — sadrži tajni ključ za potpisivanje
 JWT tokena.
+
+### Pošta
+
+Fakture se šalju klijentu kao PDF prilog. Bez ikakvog podešavanja koristi se
+**Ethereal** — nalog za probu koji se pravi sam, bez registracije. Poruka se ne
+isporučuje nikome nego ostaje na njihovom sajtu, a adresa na kojoj se vidi
+pojavi se u korpi odmah posle potvrde narudžbine.
+
+Za pravu poštu, popuniti u `.env`:
+
+```
+SMTP_HOST=smtp.primer.rs
+SMTP_PORT=587
+SMTP_USER=nalog
+SMTP_PASS=lozinka
+MAIL_FROM=Printing House <faktura@primer.rs>
+```
+
+Slanje **nikada ne obara narudžbinu**: ako padne, faktura je već izdata i PDF se
+i dalje preuzima sa strane „Narudžbine". Ethereal traži internet; preuzimanje ne.
+
+### PDF i naša slova
+
+Ugrađeni PDF fontovi nemaju č, ć, š, ž i đ — ta slova su u Latin-2, a fontovi
+koriste Latin-1. Zato se učitava sistemski TTF: **Arial**, pa Calibri, pa Segoe
+UI, pa DejaVu. Prva tri postoje na svakom Windows-u.
+
+Ako se nijedan ne nađe, dokument i dalje nastaje — samo bez dijakritike — i
+server to javi u konzoli pri prvom pravljenju PDF-a.

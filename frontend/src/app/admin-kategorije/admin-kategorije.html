@@ -1,0 +1,114 @@
+<div class="papir">
+  <span class="mark gl"></span>
+  <span class="mark gd"></span>
+  <span class="mark dl"></span>
+  <span class="mark dd"></span>
+
+  <div class="zaglavlje-lista">
+    <div>
+      <span class="nadnaslov">Registar &middot; vrste štampanih proizvoda</span>
+      <h1 class="naslov-lista">Kategorije</h1>
+    </div>
+    <span class="znacka" style="color: var(--mastilo)">Kategorija: {{ kategorije.length }}</span>
+  </div>
+  <div class="crta"></div>
+
+  @if (poruka) {
+    <p class="obavestenje" role="status">{{ poruka }}</p>
+  }
+  @if (greska) {
+    <p class="obavestenje lose" role="alert">{{ greska }}</p>
+  }
+
+  <!-- ================= NOVA KATEGORIJA ================= -->
+  <div class="odeljak" style="margin-top: 0">
+    <span class="broj">I</span>
+    <span class="tekst">Nova kategorija</span>
+    <span class="linija"></span>
+  </div>
+
+  <form (ngSubmit)="dodajKategoriju()">
+    <div class="red-unosa">
+      <div class="polje">
+        <label for="nova-kat">Naziv kategorije</label>
+        <input id="nova-kat" name="nova-kat" type="text" [(ngModel)]="novaKategorija"
+               [class.greska]="greskaKategorije"
+               placeholder="npr. Štampa na tekstilu" />
+        @if (greskaKategorije) {
+          <span class="poruka-greske" role="alert">{{ greskaKategorije }}</span>
+        }
+      </div>
+      <button type="submit" class="otisak" [disabled]="slanje">Dodaj kategoriju</button>
+    </div>
+  </form>
+
+  <!-- ================= SPISAK ================= -->
+  <div class="odeljak">
+    <span class="broj">II</span>
+    <span class="tekst">Postojeće kategorije</span>
+    <span class="linija"></span>
+  </div>
+
+  @if (ucitavanje) {
+    <p class="napomena">Učitavanje...</p>
+  } @else if (!kategorije.length) {
+    <p class="obavestenje">Još nema nijedne kategorije.</p>
+  } @else {
+    <div class="spisak">
+      @for (kategorija of kategorije; track kategorija._id) {
+        <div class="kartica">
+          <div class="kartica-vrh">
+            <div>
+              <h2 class="ime-kategorije">{{ kategorija.name }}</h2>
+              <span class="sitno">
+                Potkategorija: {{ kategorija.subcategories.length }} &middot;
+                proizvoda: {{ kategorija.productCount }}
+              </span>
+            </div>
+            <button type="button" class="otisak tih" (click)="otvoriDodavanje(kategorija)">
+              {{ uDodavanju?._id === kategorija._id ? 'Zatvori' : '+ Potkategorija' }}
+            </button>
+          </div>
+
+          @if (kategorija.subcategories.length) {
+            <div class="potkategorije">
+              @for (pot of kategorija.subcategories; track pot._id) {
+                <span class="znacka" style="color: var(--mastilo-blago)">{{ pot.name }}</span>
+              }
+            </div>
+          } @else {
+            <p class="napomena" style="margin: 12px 0 0">
+              Ova kategorija još nema potkategorije.
+            </p>
+          }
+
+          @if (uDodavanju?._id === kategorija._id) {
+            <form (ngSubmit)="dodajPotkategoriju()">
+              <div class="red-unosa" style="margin-top: 18px">
+                <div class="polje">
+                  <label [attr.for]="'nova-pot-' + kategorija._id">
+                    Nova potkategorija u „{{ kategorija.name }}"
+                  </label>
+                  <input [id]="'nova-pot-' + kategorija._id" name="nova-pot" type="text"
+                         [(ngModel)]="novaPotkategorija"
+                         [class.greska]="greskaPotkategorije" />
+                  @if (greskaPotkategorije) {
+                    <span class="poruka-greske" role="alert">{{ greskaPotkategorije }}</span>
+                  }
+                </div>
+                <button type="submit" class="otisak mali" [disabled]="slanje">Dodaj</button>
+              </div>
+            </form>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <div class="podnozje-lista">
+    <span class="sitno">
+      Kategorije se dodaju, ali se ne preimenuju i ne brišu — proizvodi čuvaju naziv kategorije.
+    </span>
+    <span class="sitno">PH &middot; registar</span>
+  </div>
+</div>

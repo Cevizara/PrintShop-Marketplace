@@ -1,0 +1,78 @@
+<div class="masina">
+
+  <div class="pisac">
+    <div class="pisac-vrh">
+      <span class="resetka"><i></i><i></i><i></i></span>
+      <span class="lampica" [class.radi]="otvoren"></span>
+    </div>
+
+    <!--
+      Na ploči nema dugmadi: ova strana radi jedan posao. Ranije su ovde stajala
+      dugmad "Prijava" i "Registracija", koja su menjala obrazac a ne adresu -
+      zbog toga su ta dva posla i razdvojena na dve rute.
+    -->
+    <div class="panel">
+      <span class="panel-natpis">
+        Obrazac 01<br /><strong>Prijava korisnika</strong>
+      </span>
+    </div>
+  </div>
+
+  <div class="prorez"></div>
+
+  <div class="izlaz" [class.otvoren]="otvoren">
+    <div class="papir">
+      <span class="mark gl"></span>
+      <span class="mark gd"></span>
+      <span class="mark dl"></span>
+      <span class="mark dd"></span>
+
+      <span class="nadnaslov">Obrazac 01 &middot; prijava na sistem</span>
+      <h1 class="naslov-lista">Prijava</h1>
+      <div class="crta"></div>
+
+      <!--
+        Objašnjenje zašto ste vraćeni na prijavu — stiže sa servera kada odbije
+        istekao token. Nije greška prijave, pa nema crvenu ivicu.
+      -->
+      @if (porukaSesije) {
+        <p class="obavestenje" role="status">{{ porukaSesije }}</p>
+      }
+
+      @if (poruka) {
+        <p class="obavestenje lose" role="alert">{{ poruka }}</p>
+      }
+
+      <form (ngSubmit)="posaljiPrijavu()">
+        <div class="polja">
+          <div class="polje">
+            <label for="p-korisnicko">Korisničko ime</label>
+            <input id="p-korisnicko" name="p-korisnicko" type="text"
+                   [(ngModel)]="korisnickoIme" placeholder="npr. pera" autocomplete="username" />
+          </div>
+
+          <div class="polje">
+            <label for="p-lozinka">Lozinka</label>
+            <input id="p-lozinka" name="p-lozinka" type="password"
+                   [(ngModel)]="lozinka" autocomplete="current-password" />
+          </div>
+        </div>
+
+        <div class="akcije">
+          <button type="submit" class="otisak" [disabled]="slanje">Prijavi se</button>
+          <span class="sitno">
+            Nemate nalog? <a routerLink="/registracija">Registrujte se</a>
+          </span>
+        </div>
+      </form>
+
+      <div class="podnozje-lista">
+        <span class="sitno">
+          <a routerLink="/zaboravljena-lozinka">Zaboravili ste lozinku?</a>
+        </span>
+        <span class="sitno">PH &middot; 01</span>
+      </div>
+    </div>
+  </div>
+
+</div>

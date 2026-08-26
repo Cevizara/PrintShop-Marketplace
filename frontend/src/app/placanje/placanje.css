@@ -1,0 +1,90 @@
+/* Obrazac za plaćanje: račun, pa nacrtana kartica koja prati unos. */
+
+.racun {
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px dashed var(--papir-isprekidana);
+}
+
+.racun .red {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 6px 0;
+  font-size: 14px;
+  color: var(--mastilo-blago);
+}
+
+.racun .red.zbir {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--mastilo);
+  color: var(--mastilo);
+  font-weight: 600;
+  font-size: 18px;
+}
+
+/*
+  Kartica se puni dok korisnik kuca — nije ukras nego provera: broj i datum se
+  vide onako kako će biti poslati, pa se greška u kucanju uhvati pre slanja.
+  Tonovi su iz mašine, ne iz papira: kartica nije odštampan dokument.
+*/
+.kartica {
+  background: linear-gradient(140deg, var(--masina-vrh), var(--masina-dno));
+  border: 1px solid var(--masina-ivica);
+  border-radius: 10px;
+  padding: 20px 22px 18px;
+  max-width: 380px;
+  box-shadow: 0 14px 30px -14px rgba(0, 0, 0, .75);
+}
+
+.kartica-vrh {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 26px;
+}
+
+/* čip */
+.cip {
+  width: 34px;
+  height: 25px;
+  border-radius: 4px;
+  background: linear-gradient(150deg, var(--zuta), #B99A25);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .25);
+}
+
+.tip-kartice {
+  font-family: var(--pismo-oznaka);
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--masina-tekst);
+}
+
+.kartica-broj {
+  font-size: 19px;
+  letter-spacing: .1em;
+  color: var(--papir);
+  margin-bottom: 20px;
+  word-break: break-all;
+}
+
+.kartica-dno {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+.kartica-dno .sitno {
+  color: var(--radionica-prigusen);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+
+.dugmad { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+
+@media (max-width: 720px) {
+  .kartica { max-width: none; padding: 16px 18px 14px; }
+  .kartica-broj { font-size: 16px; }
+  .dugmad .otisak { width: 100%; }
+}

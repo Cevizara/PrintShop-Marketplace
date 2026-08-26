@@ -2,6 +2,10 @@
   Administratorski ulaz namerno izgleda drugačije od javnog: kraft papir sa
   pečatom umesto belog lista. Nije zahtev teksta zadatka, ali odmah pokazuje
   da je ovo odvojen, nejavni ulaz u sistem.
+
+  Mašina se zato ovde definiše ponovo, iako ista imena klasa postoje i u
+  styles.css. Angular stilove komponente veže za nju samu, pa ova pravila
+  nadjačavaju zajednička - to je namerno, a ne previd.
 */
 
 .masina { display: flex; flex-direction: column; align-items: center; margin-top: 40px; }

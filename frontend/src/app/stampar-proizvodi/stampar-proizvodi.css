@@ -1,0 +1,27 @@
+/* Lager lista: tabela proizvoda, izmene se otvaraju u samom redu. */
+
+.dugmad { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Link koji izgleda kao dugme - podvlačenje iz globalnog stila mu ne treba. */
+.veza { display: inline-block; border-bottom: 0; }
+
+.minijatura {
+  object-fit: cover;
+  border: 1px solid var(--papir-linija);
+  background: var(--papir-senka);
+}
+.minijatura.krupna { width: 72px; height: 72px; }
+
+.red-forme {
+  background: rgba(120, 110, 90, .06);
+  border-left: 3px solid var(--mastilo);
+  padding: 20px 18px 22px;
+}
+
+.red-unosa { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+
+.galerija-sada { display: flex; gap: 10px; flex-wrap: wrap; }
+
+@media (max-width: 720px) {
+  .red-unosa .otisak { width: 100%; }
+}

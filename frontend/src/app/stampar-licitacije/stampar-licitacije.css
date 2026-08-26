@@ -1,0 +1,75 @@
+/* Licitacije: otvorene nabavke, obrazac ponude, pa izveštaj o poslatim. */
+
+.spisak { display: flex; flex-direction: column; gap: 22px; margin-bottom: 8px; }
+
+.nabavka {
+  border: 1px dashed var(--papir-isprekidana);
+  padding: 18px 20px 20px;
+}
+
+.nabavka-vrh {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.broj-nabavke {
+  font-family: var(--pismo-oznaka);
+  font-size: 15px;
+  letter-spacing: .1em;
+  margin: 0 0 5px;
+}
+
+.stanje {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  text-align: right;
+}
+
+.dugmad { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
+
+/* Obrazac ponude je uvučen i blago zatamnjen — pripada nabavci iznad. */
+.obrazac {
+  margin-top: 18px;
+  padding: 18px;
+  background: rgba(120, 110, 90, .06);
+  border-left: 3px solid var(--mastilo);
+}
+
+/*
+  Jedan red: šta se traži levo, čime to pokrivamo u sredini, cena desno.
+  To je ceo posao ove strane, pa red čita s leva na desno kao rečenica.
+*/
+.red-ponude {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 150px;
+  gap: 16px;
+  align-items: end;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--papir-linija);
+}
+.red-ponude:last-of-type { border-bottom: 0; }
+
+.trazeno { padding-bottom: 6px; }
+.trazeno .sitno { display: block; margin-top: 3px; }
+
+.zbir {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--mastilo);
+  font-weight: 600;
+  font-size: 17px;
+}
+
+@media (max-width: 860px) {
+  .red-ponude { grid-template-columns: 1fr; gap: 12px; }
+  .stanje { align-items: flex-start; text-align: left; }
+}

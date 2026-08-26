@@ -1,0 +1,26 @@
+/* Knjiga naloga: filter iznad tabele, izmena se otvara u samom redu. */
+
+.filter { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+.filter .polje { flex: 1; min-width: 190px; }
+
+.minijatura {
+  object-fit: cover;
+  border: 1px solid var(--papir-linija);
+  background: var(--papir-senka);
+}
+
+.dugmad { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/*
+  Red u kojem se otvara forma. Uvučen je i blago zatamnjen, da se odmah vidi da
+  pripada redu iznad, a ne da je novi zapis u tabeli.
+*/
+.red-forme {
+  background: rgba(120, 110, 90, .06);
+  border-left: 3px solid var(--mastilo);
+  padding: 20px 18px 22px;
+}
+
+@media (max-width: 720px) {
+  .filter .otisak { width: 100%; }
+}

@@ -1,0 +1,186 @@
+<div class="papir">
+  <span class="mark gl"></span>
+  <span class="mark gd"></span>
+  <span class="mark dl"></span>
+  <span class="mark dd"></span>
+
+  <div class="zaglavlje-lista">
+    <div>
+      <span class="nadnaslov">Pozivi za podnošenje ponuda</span>
+      <h1 class="naslov-lista">Javne nabavke</h1>
+    </div>
+    <button type="button" class="otisak tih" (click)="ucitaj()">Osveži</button>
+  </div>
+  <div class="crta"></div>
+
+  @if (greska) {
+    <p class="obavestenje lose" role="alert">{{ greska }}</p>
+  }
+
+  <p class="napomena" style="margin-bottom: 20px">
+    Licitacija traje 10 minuta od raspisivanja. Nabavku dobija štamparija sa
+    najnižom ukupnom ponudom koja ima dovoljne količine svih traženih proizvoda
+    na stanju. Ishod se utvrđuje pri prvom otvaranju ove strane posle isteka roka.
+  </p>
+
+  @if (ucitavanje) {
+    <p class="napomena">Učitavanje...</p>
+  } @else if (!nabavke.length) {
+    <p class="obavestenje">
+      Još niste raspisali nijednu javnu nabavku. Ubacite proizvode u korpu i
+      pritisnite „Potvrdi" — kao pravno lice time raspisujete nabavku.
+    </p>
+    <div class="akcije">
+      <a routerLink="/klijent/pretraga" class="otisak veza">Idi na pretragu</a>
+    </div>
+  } @else {
+    <div class="spisak">
+      @for (nabavka of nabavke; track nabavka._id) {
+        <div class="nabavka">
+          <div class="nabavka-vrh">
+            <div>
+              <h2 class="broj-nabavke">{{ nabavka.number }}</h2>
+              <span class="sitno">
+                raspisana {{ nabavka.createdAt | date: 'dd.MM.yyyy. HH:mm' }} &middot;
+                proizvoda: {{ nabavka.items.length }} &middot;
+                ukupno komada: {{ ukupnoKomada(nabavka) }}
+              </span>
+            </div>
+
+            <div class="stanje">
+              <span class="znacka" [style.color]="bojaStatusa(nabavka.status)">
+                {{ nazivStatusa(nabavka.status) }}
+              </span>
+              @if (nabavka.status === 'OPEN') {
+                <span class="sitno">preostalo: {{ preostalo(nabavka) }}</span>
+              }
+              <span class="sitno">pristiglih ponuda: {{ nabavka.bidCount }}</span>
+            </div>
+          </div>
+
+          <!-- ============ TRAŽENI PROIZVODI ============ -->
+          <div class="tabela-okvir">
+            <table>
+              <thead>
+                <tr>
+                  <th>Traženi proizvod</th>
+                  <th>Kategorija</th>
+                  <th>Količina</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (stavka of nabavka.items; track stavka._id) {
+                  <tr>
+                    <td>{{ stavka.name }}</td>
+                    <td class="prigusen">
+                      {{ stavka.categoryName }}
+                      @if (stavka.subcategoryName) {
+                        <br /><span class="sitno">{{ stavka.subcategoryName }}</span>
+                      }
+                    </td>
+                    <td class="jednosir">{{ stavka.quantity }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- ============ ISHOD ============ -->
+          @if (nabavka.status === 'AWARDED') {
+            <p class="obavestenje" style="margin: 16px 0 0">
+              Nabavku je dobila <strong>{{ imeStamparije(nabavka) }}</strong>,
+              sa ukupnom ponudom od
+              <strong>{{ nabavka.winnerTotal | number: '1.0-2' }} RSD</strong>.
+              Proizvodi su fakturisani i narudžbina je u statusu „u štampi".
+            </p>
+          }
+          @if (nabavka.status === 'FAILED') {
+            <p class="obavestenje lose" style="margin: 16px 0 0">
+              {{ nabavka.failureReason }}
+            </p>
+          }
+
+          <div class="dugmad">
+            <button type="button" class="otisak tih" (click)="otvoriIzvestaj(nabavka)">
+              {{ uIzvestaju === nabavka._id ? 'Zatvori izveštaj' : 'Izveštaj o ponudama' }}
+            </button>
+            @if (nabavka.status !== 'OPEN') {
+              <button type="button" class="otisak tamni mali" (click)="preuzmiIzvestaj(nabavka)">
+                PDF izveštaj
+              </button>
+            }
+          </div>
+
+          <!-- ============ IZVEŠTAJ ============ -->
+          @if (uIzvestaju === nabavka._id) {
+            @if (!izvestaj) {
+              <p class="napomena">Učitavanje izveštaja...</p>
+            } @else if (!izvestaj.bids.length) {
+              <p class="napomena">Za ovu nabavku nije stigla nijedna ponuda.</p>
+            } @else {
+              <div class="odeljak">
+                <span class="broj">01</span>
+                <span class="tekst">Sve pristigle ponude</span>
+                <span class="linija"></span>
+              </div>
+
+              <div class="tabela-okvir">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Štamparija</th>
+                      <th>Ponuđeni proizvodi</th>
+                      <th>Ukupno</th>
+                      <th>Poslato</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (ponuda of izvestaj.bids; track ponuda._id) {
+                      <!-- Pobednička ponuda se izdvaja — tekst zadatka traži da
+                           izveštaj pokaže i sve ponude i onu koja je dobila. -->
+                      <tr [class.pobednicka]="jePobednicka(ponuda._id)">
+                        <td>
+                          {{ imeStamparijePonude(ponuda) }}
+                          @if (jePobednicka(ponuda._id)) {
+                            <br /><span class="znacka" style="color: #1F7A4C">dobila nabavku</span>
+                          }
+                        </td>
+                        <td>
+                          <ul class="redovi">
+                            @for (red of ponuda.lines; track red._id) {
+                              <li>
+                                {{ red.productName }}
+                                <span class="sitno">
+                                  {{ red.productCode }} &middot;
+                                  {{ red.unitPrice | number: '1.0-2' }} × {{ red.quantity }}
+                                </span>
+                              </li>
+                            }
+                          </ul>
+                        </td>
+                        <td class="jednosir">{{ ponuda.total | number: '1.0-2' }} RSD</td>
+                        <td class="prigusen">{{ ponuda.createdAt | date: 'dd.MM. HH:mm' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+
+              <p class="napomena" style="margin-top: 12px">
+                Ponude su poređane po ukupnom iznosu. Isti sadržaj se dugmetom
+                „PDF izveštaj" preuzima kao dokument.
+              </p>
+            }
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <div class="podnozje-lista">
+    <span class="sitno">
+      Lager se skida tek pobedniku licitacije, ne pri raspisivanju nabavke.
+    </span>
+    <span class="sitno">PH &middot; javne nabavke</span>
+  </div>
+</div>

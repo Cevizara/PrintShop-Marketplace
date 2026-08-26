@@ -16,7 +16,9 @@ export function rolaGuard(...dozvoljeniTipovi: TipKorisnika[]): CanActivateFn {
     const router = inject(Router);
 
     if (!auth.prijavljen) {
-      router.navigate(['/pristup']);
+      // Bez ovoga bi korisnik stigao na prijavu bez ijedne reci o tome zasto.
+      auth.porukaSesije.set('Ta strana je dostupna samo prijavljenim korisnicima.');
+      router.navigate(['/prijava']);
       return false;
     }
 

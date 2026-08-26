@@ -5,7 +5,14 @@ import { connectToDatabase } from "./config/database";
 import { env } from "./config/env";
 import { KOREN_OTPREME, pripremiFoldere } from "./middleware/upload.middleware";
 import authRouter from "./routers/auth.router";
+import cartRouter from "./routers/cart.router";
+import categoryRouter from "./routers/category.router";
+import invoiceRouter from "./routers/invoice.router";
+import procurementRouter from "./routers/procurement.router";
+import productRouter from "./routers/product.router";
 import publicRouter from "./routers/public.router";
+import ratingRouter from "./routers/rating.router";
+import statsRouter from "./routers/stats.router";
 import userRouter from "./routers/user.router";
 
 const app = express();
@@ -21,7 +28,14 @@ app.use("/uploads", express.static(KOREN_OTPREME));
 const router = express.Router();
 router.use("/auth", authRouter);
 router.use("/users", userRouter);
+router.use("/categories", categoryRouter);
+router.use("/cart", cartRouter);
+router.use("/invoices", invoiceRouter);
+router.use("/procurements", procurementRouter);
+router.use("/products", productRouter);
 router.use("/public", publicRouter);
+router.use("/ratings", ratingRouter);
+router.use("/stats", statsRouter);
 
 app.use("/", router);
 

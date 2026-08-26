@@ -1,0 +1,120 @@
+/* Priprema proizvoda: prikaz štampe levo, podešavanja desno. */
+
+.raspored {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+/*
+  Platno je slika proizvoda sa otiskom preko nje. Preklapanje se radi
+  pozicioniranjem, bez ikakve obrade slike - fusnota 3 teksta zadatka.
+*/
+.platno {
+  position: relative;
+  border: 1px solid var(--papir-linija);
+  background: var(--papir-senka);
+  line-height: 0;
+}
+
+.podloga { width: 100%; display: block; }
+
+/*
+  Otisak se pozicionira po sredini: left/top su njegovo SREDIŠTE, pa ga
+  translate(-50%, -50%) povlači nazad za pola svoje veličine. Tako pomeranje
+  prati kursor, umesto da gornji levi ugao skače na tačku klika.
+*/
+.otisak-stampe {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: grab;
+  touch-action: none;
+  /* Da tekst unutra može da se meri prema širini otiska (jedinica cqw). */
+  container-type: inline-size;
+  /* isprekidani okvir pokazuje dokle ide površina za štampu */
+  outline: 1px dashed rgba(26, 24, 21, .35);
+  outline-offset: 5px;
+}
+.otisak-stampe:active { cursor: grabbing; }
+
+.otisak-stampe .slicica {
+  width: 100%;
+  display: block;
+  object-fit: contain;
+  /* Slika se ne hvata sama - prevlači se ceo otisak. */
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.otisak-stampe .tekst-stampe {
+  font-family: var(--pismo-naslov);
+  /*
+    Veličina slova prati širinu otiska, pa klizač menja i tekst.
+    Prva vrednost je zaštita: pregledač koji ne poznaje jedinicu cqw odbaci
+    drugu deklaraciju i ostane na njoj, umesto da nasledi veličinu odnekud.
+  */
+  font-size: 18px;
+  font-size: clamp(11px, 15cqw, 40px);
+  line-height: 1.15;
+  text-align: center;
+  color: var(--mastilo);
+  word-break: break-word;
+  pointer-events: none;
+  user-select: none;
+  /* blaga svetla podloga, da tekst ostane čitljiv i na tamnijoj slici */
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .55);
+}
+
+/* red sa klizačem za veličinu i dugmetom za centriranje */
+.upravljanje {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.upravljanje .polje { flex: 1; min-width: 200px; }
+
+.upravljanje input[type="range"] {
+  width: 100%;
+  accent-color: var(--magenta);
+  margin: 6px 0 2px;
+}
+
+/* račun stoji kao odštampana priznanica ispod podešavanja */
+.racun {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--papir-isprekidana);
+}
+
+.racun .red {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 7px 0;
+  font-size: 14px;
+  color: var(--mastilo-blago);
+}
+
+.racun .red.zbir {
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--mastilo);
+  color: var(--mastilo);
+  font-weight: 600;
+  font-size: 17px;
+}
+
+.dugmad { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+
+@media (max-width: 860px) {
+  .raspored { grid-template-columns: 1fr; gap: 26px; }
+  .dugmad .otisak { width: 100%; }
+}

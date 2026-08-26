@@ -1,0 +1,162 @@
+/* E-korpa: po jedna grupa za svaku štampariju, pa zbir i potvrda. */
+
+/*
+  List sa kutijama sa obe strane. Kutije su ukras i stoje u toku dokumenta, a ne
+  apsolutno pozicionirane - tako ne mogu da prekriju sadržaj ni na jednoj širini.
+*/
+.sa-kutijama {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr) 132px;
+  align-items: start;
+  gap: 26px;
+}
+
+.kutija {
+  width: 100%;
+  height: auto;
+  /* Ukras ne sme da odvlači pažnju sa sadržaja. */
+  opacity: .82;
+  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, .5));
+}
+
+/* leva stoji malo niže, desna malo više - da ne deluju kao dva ista otiska */
+.kutija.leva { margin-top: 48px; transform: rotate(-3deg); }
+.kutija.desna { margin-top: 96px; transform: rotate(4deg); }
+
+/*
+  Ispod 1100px kutije bi stisnule tabelu, pa se sklanjaju. Sadržaj je važniji od
+  ukrasa, i tekst zadatka traži da aplikacija bude upotrebljiva i na manjim
+  ekranima.
+*/
+@media (max-width: 1100px) {
+  .sa-kutijama { display: block; }
+  .kutija { display: none; }
+}
+
+.grupa {
+  margin-bottom: 28px;
+  padding-bottom: 22px;
+  border-bottom: 1px dashed var(--papir-isprekidana);
+}
+.grupa:last-of-type { border-bottom: 0; }
+
+.grupa-vrh {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.ime-stamparije {
+  font-family: var(--pismo-naslov);
+  font-weight: 400;
+  font-size: 21px;
+  margin: 0 0 3px;
+  line-height: 1.15;
+}
+
+.minijatura {
+  object-fit: cover;
+  border: 1px solid var(--papir-linija);
+  background: var(--papir-senka);
+  vertical-align: middle;
+}
+
+/*
+  Proizvod sa otiskom, u malom. Isti račun kao na strani za pripremu: položaj i
+  širina su procenti slike, pa isto podešavanje radi i na 56 piksela.
+*/
+.pregled {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border: 1px solid var(--papir-linija);
+  background: var(--papir-senka);
+  overflow: hidden;
+}
+
+.pregled .podloga { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.pregled .otisak {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  container-type: inline-size;
+}
+
+.pregled .otisak img { width: 100%; display: block; object-fit: contain; }
+
+.pregled .otisak span {
+  font-family: var(--pismo-naslov);
+  font-size: 4px;
+  font-size: clamp(3px, 15cqw, 9px);
+  line-height: 1.1;
+  text-align: center;
+  color: var(--mastilo);
+  word-break: break-word;
+}
+
+/* Stavka kojoj je ponestalo na lageru — istaknuta, ali i dalje čitljiva. */
+.nedostupna { background: rgba(154, 59, 34, .06); }
+
+.kolicina {
+  width: 100%;
+  font-family: var(--pismo-tekst);
+  font-size: 15px;
+  color: var(--mastilo);
+  background: transparent;
+  border: 0;
+  border-bottom: 1.5px solid #2B2721;
+  padding: 5px 2px 6px;
+  outline: none;
+  border-radius: 0;
+}
+.kolicina:focus { border-bottom-color: var(--magenta); }
+
+/* zbir stoji kao odštampana priznanica */
+.zbir-okvir {
+  margin: 8px 0 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--mastilo);
+}
+
+.zbir-red {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 6px 0;
+  font-size: 14px;
+  color: var(--mastilo-blago);
+}
+
+.zbir-red.ukupno {
+  color: var(--mastilo);
+  font-weight: 600;
+  font-size: 19px;
+  padding-top: 10px;
+}
+
+/* Link koji izgleda kao dugme — globalno podvlačenje mu ne treba. */
+.veza { display: inline-block; border-bottom: 0; }
+
+@media (max-width: 720px) {
+  .grupa-vrh .znacka { align-self: flex-start; }
+}
+
+/* Podaci o raspisanoj nabavci, posle potvrde iz korpe. */
+.stavke-nabavke { display: flex; flex-direction: column; gap: 0; margin: 18px 0 0; }
+.stavke-nabavke > div {
+  display: flex; justify-content: space-between; gap: 16px;
+  padding: 10px 0; border-bottom: 1px solid var(--papir-linija);
+}
+.stavke-nabavke dt {
+  font-family: var(--pismo-oznaka); font-size: 10px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--mastilo-blago); margin: 0;
+}
+.stavke-nabavke dd { margin: 0; font-size: 15px; }

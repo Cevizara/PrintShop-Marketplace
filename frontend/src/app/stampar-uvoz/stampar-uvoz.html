@@ -1,0 +1,171 @@
+<div class="papir">
+  <span class="mark gl"></span>
+  <span class="mark gd"></span>
+  <span class="mark dl"></span>
+  <span class="mark dd"></span>
+
+  <span class="nadnaslov">Obrazac 04 &middot; uvoz lager liste</span>
+  <h1 class="naslov-lista">Dodavanje iz fajla</h1>
+  <div class="crta"></div>
+
+  @if (poruka) {
+    <p class="obavestenje lose" role="alert">{{ poruka }}</p>
+  }
+
+  <!-- ================= KORAK 1: FAJL ================= -->
+  @if (!izvestaj) {
+    <div class="odeljak" style="margin-top: 0">
+      <span class="broj">I</span>
+      <span class="tekst">Izbor fajla</span>
+      <span class="linija"></span>
+    </div>
+
+    <p class="napomena" style="margin-bottom: 18px">
+      Očekuje se JSON fajl u formatu iz Priloga 1 teksta zadatka: objekat sa listom
+      <span class="jednosir">proizvodi</span>, gde svaki proizvod ima šifru, naziv,
+      kategoriju, cenu, količinu i usluge štampe.
+    </p>
+
+    <div class="polje">
+      <div class="fajl">
+        <label class="dugme-fajl" for="u-fajl">Izaberi JSON fajl</label>
+        <input id="u-fajl" type="file" accept="application/json,.json"
+               (change)="izabranFajl($event)" />
+        <span class="napomena">{{ imeFajla || 'Nijedan fajl nije izabran' }}</span>
+      </div>
+    </div>
+
+    <div class="akcije">
+      <button type="button" class="otisak" [disabled]="slanje || !fajl" (click)="uvezi()">
+        Uvezi lager listu
+      </button>
+      <span class="sitno">
+        <a routerLink="/stampar/proizvodi">← Nazad na lager listu</a>
+      </span>
+    </div>
+
+    <div class="obavestenje" style="margin-top: 26px">
+      <strong>Šta se ne preuzima iz fajla:</strong><br />
+      Podaci o štampariji iz fajla se zanemaruju — proizvodi se uvek upisuju nalogu
+      kojim ste prijavljeni.<br />
+      Slike se ne preuzimaju preko linka, jer to tekst zadatka zabranjuje. Uvezeni
+      proizvodi dobijaju podrazumevanu sliku, a prave se dodaju u sledećem koraku.
+    </div>
+  }
+
+  <!-- ================= KORAK 2: IZVEŠTAJ I SLIKE ================= -->
+  @if (izvestaj) {
+    <div class="odeljak" style="margin-top: 0">
+      <span class="broj">II</span>
+      <span class="tekst">Izveštaj o uvozu</span>
+      <span class="linija"></span>
+    </div>
+
+    <p class="obavestenje" role="status">{{ izvestaj.message }}</p>
+
+    @if (izvestaj.skipped.length) {
+      <div class="tabela-okvir" style="margin-bottom: 24px">
+        <table>
+          <thead>
+            <tr>
+              <th>Preskočena šifra</th>
+              <th>Razlog</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (red of izvestaj.skipped; track $index) {
+              <tr>
+                <td class="jednosir">{{ red.code }}</td>
+                <td class="prigusen">{{ red.reason }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (izvestaj.products.length) {
+      <div class="odeljak">
+        <span class="broj">III</span>
+        <span class="tekst">Dodatni korak — slike uvezenih proizvoda</span>
+        <span class="linija"></span>
+      </div>
+
+      <div class="spisak">
+        @for (proizvod of izvestaj.products; track proizvod._id) {
+          <div class="kartica">
+            <div class="kartica-vrh">
+              <img [src]="slika(proizvod.mainImage)" [alt]="proizvod.name" class="minijatura" />
+
+              <div class="kartica-telo">
+                <div class="ime">{{ proizvod.name }}</div>
+                <span class="sitno">
+                  {{ proizvod.code }} &middot; {{ proizvod.categoryName }} &middot;
+                  na stanju: {{ proizvod.stock }} &middot;
+                  usluga: {{ proizvod.printServices.length }}
+                </span>
+              </div>
+
+              <button type="button" class="otisak tih" (click)="otvoriSlike(proizvod)">
+                {{ uSlikama === proizvod._id ? 'Zatvori' : 'Dodaj slike' }}
+              </button>
+            </div>
+
+            @if (uSlikama === proizvod._id) {
+              <div class="unos-slika">
+                <div class="polje">
+                  <div class="fajl">
+                    <label class="dugme-fajl" [attr.for]="'g-' + proizvod._id">Glavna slika</label>
+                    <input [id]="'g-' + proizvod._id" type="file"
+                           accept="image/jpeg,image/png,image/gif"
+                           (change)="izabranaGlavna($event)" />
+                    <span class="napomena">
+                      {{ glavnaSlika?.name || 'Zamenjuje podrazumevanu sliku' }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="polje">
+                  <div class="fajl">
+                    <label class="dugme-fajl" [attr.for]="'d-' + proizvod._id">Galerija</label>
+                    <input [id]="'d-' + proizvod._id" type="file" multiple
+                           accept="image/jpeg,image/png,image/gif"
+                           (change)="izabraneDodatne($event)" />
+                    <span class="napomena">
+                      @if (dodatneSlike.length) {
+                        Izabrano slika: {{ dodatneSlike.length }}
+                      } @else {
+                        Najviše 3 dodatne slike
+                      }
+                    </span>
+                  </div>
+                </div>
+
+                @if (greskaSlika) {
+                  <span class="poruka-greske" role="alert">{{ greskaSlika }}</span>
+                }
+
+                <button type="button" class="otisak mali" [disabled]="slanjeSlika"
+                        (click)="posaljiSlike(proizvod)">
+                  Sačuvaj slike
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <div class="akcije">
+      <a routerLink="/stampar/proizvodi" class="otisak veza">Gotovo — na lager listu</a>
+      <span class="sitno">
+        <button type="button" class="kao-link" (click)="ponovo()">Uvezi još jedan fajl</button>
+      </span>
+    </div>
+  }
+
+  <div class="podnozje-lista">
+    <span class="sitno">Proizvod sa šifrom koju već imate se preskače, a ne prepisuje.</span>
+    <span class="sitno">PH &middot; 04</span>
+  </div>
+</div>
