@@ -207,6 +207,23 @@
       </div>
     </form>
 
+    <!-- ================= NARUDŽBINE =================
+         Tekst zadatka traži ovu tabelu „испод табеле са личним подацима", pa
+         stoji tačno tu — ispod obrasca, na istom listu. Vide je samo klijenti:
+         štampar svoje narudžbine ima na svojoj strani, a administrator ih nema.
+
+         Redni broj odeljka se računa, jer pravno lice iznad ima i odeljak sa
+         podacima o instituciji, a fizičko lice nema. -->
+    @if (jeKlijent) {
+      <div class="odeljak" id="narudzbine">
+        <span class="broj">{{ brojOdeljkaNarudzbina }}</span>
+        <span class="tekst">Moje narudžbine</span>
+        <span class="linija"></span>
+      </div>
+
+      <app-klijent-narudzbine />
+    }
+
     <div class="podnozje-lista">
       <span class="sitno">Nalog otvoren: {{ korisnik.createdAt | date: 'dd.MM.yyyy.' }}</span>
       <span class="sitno">PH &middot; karton korisnika</span>

@@ -103,21 +103,38 @@
                   <div class="trazeno">
                     <strong>{{ stavka.name }}</strong>
                     <span class="sitno">
-                      {{ stavka.categoryName }} &middot; traži se {{ stavka.quantity }} kom
+                      {{ stavka.categoryName }}
+                      @if (stavka.subcategoryName) {
+                        &middot; {{ stavka.subcategoryName }}
+                      }
+                      &middot; traži se {{ stavka.quantity }} kom
                     </span>
                   </div>
 
                   <div class="polje">
                     <label [attr.for]="'p-' + stavka._id">Nudim iz svog kataloga</label>
+
+                    <!-- Lista nudi samo proizvode iz tražene potkategorije.
+                         Nije stvar udobnosti: server odbija ponudu koja tome ne
+                         odgovara, pa obrazac ne sme da nudi izbor koji će pući. -->
                     <select [id]="'p-' + stavka._id" [name]="'p-' + stavka._id"
-                            [(ngModel)]="unos[stavka._id].productId">
+                            [(ngModel)]="unos[stavka._id].productId"
+                            [disabled]="!predlozi(stavka).length">
                       <option value="">— izaberite proizvod —</option>
-                      @for (p of predlozi(stavka.categoryName); track p._id) {
+                      @for (p of predlozi(stavka); track p._id) {
                         <option [value]="p._id">
                           {{ p.name }} ({{ p.code }}) &middot; na stanju: {{ p.stock }}
                         </option>
                       }
                     </select>
+
+                    @if (!predlozi(stavka).length) {
+                      <span class="poruka-greske">
+                        Nemate nijedan proizvod u potkategoriji
+                        „{{ stavka.subcategoryName || stavka.categoryName }}“, pa za
+                        ovu nabavku ne možete poslati ponudu.
+                      </span>
+                    }
                     @if (malo(stavka._id, stavka.quantity)) {
                       <span class="poruka-greske">
                         Nemate dovoljno na stanju — ponuda će biti odbačena pri

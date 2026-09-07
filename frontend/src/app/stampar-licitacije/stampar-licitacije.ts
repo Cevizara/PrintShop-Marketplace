@@ -1,7 +1,7 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MojaPonuda, Nabavka, Proizvod } from '../models/models';
+import { MojaPonuda, Nabavka, Proizvod, StavkaNabavke } from '../models/models';
 import { ProcurementService, RedZaSlanje } from '../services/procurement.service';
 import { ProductService } from '../services/product.service';
 
@@ -95,15 +95,24 @@ export class StamparLicitacije implements OnInit {
   }
 
   /**
-   * Proizvodi koje nudimo za jednu traženu stavku.
+   * Proizvodi koje SMEMO ponuditi za jednu traženu stavku.
    *
-   * Prvo se nude oni iz iste kategorije — to je pomoć štamparu, ne pravilo:
-   * ispod stoji i ostatak kataloga, jer odluku donosi on, a ne poređenje naziva.
+   * Samo oni iz iste kategorije i potkategorije. Ranije je lista nudila ceo
+   * katalog, a poklapanje kategorije je bilo samo redosled — „pomoć štamparu,
+   * ne pravilo". To je bila rupa: na traženu šolju se mogao ponuditi duks po
+   * niskoj ceni i tako dobiti nabavka.
+   *
+   * Sada je pravilo, i server ga proverava (vidi posaljiPonudu). Lista se
+   * sužava da obrazac ne bi nudio izbor koji će pri slanju biti odbijen.
+   *
+   * Unutar potkategorije i dalje biramo sami — to i jeste licitacija.
    */
-  predlozi(kategorija: string): Proizvod[] {
-    const uKategoriji = this.mojiProizvodi.filter((p) => p.categoryName === kategorija);
-    const ostali = this.mojiProizvodi.filter((p) => p.categoryName !== kategorija);
-    return [...uKategoriji, ...ostali];
+  predlozi(stavka: StavkaNabavke): Proizvod[] {
+    return this.mojiProizvodi.filter(
+      (p) =>
+        p.categoryName === stavka.categoryName &&
+        (!stavka.subcategoryName || p.subcategoryName === stavka.subcategoryName)
+    );
   }
 
   proizvod(id: string): Proizvod | undefined {

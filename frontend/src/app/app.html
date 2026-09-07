@@ -61,7 +61,8 @@
 
       @if (auth.jeTipa('CLIENT_INDIVIDUAL', 'CLIENT_COMPANY')) {
         <a routerLink="/klijent/pretraga" routerLinkActive="aktivna">Pretraga</a>
-        <a routerLink="/klijent/narudzbine" routerLinkActive="aktivna">Narudžbine</a>
+        <!-- Narudžbine više nisu zasebna stavka: tabela stoji na profilu, kako
+             traži tekst zadatka. Ime korisnika u zaglavlju je link na profil. -->
         <a routerLink="/klijent/arhiva" routerLinkActive="aktivna">Arhiva</a>
 
         <!--

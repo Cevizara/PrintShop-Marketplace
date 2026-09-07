@@ -31,4 +31,15 @@ export const env = {
   smtpUser: process.env.SMTP_USER || "",
   smtpPass: process.env.SMTP_PASS || "",
   mailFrom: process.env.MAIL_FROM || "Printing House <faktura@printinghouse.rs>",
+
+  /**
+   * Placanje. Ako se kljuc ostavi prazan, naplata se resava lokalno, sa
+   * Stripe-ovim brojevima test kartica. Ako se upise TEST kljuc (sk_test_...),
+   * ide pravi poziv ka Stripe-u. Vidi utils/placanje.ts.
+   *
+   * Valuta je podesiva jer zavisi od zemlje Stripe naloga: nalog otvoren van
+   * Srbije cesto ne moze da naplati u RSD, pa se prelazi na "eur".
+   */
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
+  stripeCurrency: (process.env.STRIPE_CURRENCY || "rsd").toLowerCase(),
 };

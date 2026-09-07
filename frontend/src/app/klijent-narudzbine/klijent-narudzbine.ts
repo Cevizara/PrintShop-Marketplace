@@ -7,10 +7,17 @@ import { otvoriPdf } from '../services/preuzimanje';
 import { FakturaZaPlacanje, Placanje } from '../placanje/placanje';
 
 /**
- * Tabela narudžbina klijenta.
+ * Tabela narudžbina klijenta — ODELJAK PROFILA, ne zasebna strana.
  *
- * Tekst zadatka traži tabelu sa „svim prethodno realizovanim i trenutno
- * aktuelnim još uvek nerealizovanim narudžbinama" i mogućnošću sortiranja.
+ * Tekst zadatka je izričit da ova tabela stoji „испод табеле са личним
+ * подацима", pa je ubačena u profil kao dete. Ranije je bila zasebna strana na
+ * ruti `/klijent/narudzbine`; ta ruta je uklonjena, jer bi ista tabela na dva
+ * mesta značila i dva mesta na kojima se kvari.
+ *
+ * Ostala je zasebna komponenta, a nije uliven u `Profil`, jer je posao dovoljno
+ * velik sam za sebe: sortiranje, otkazivanje, potvrda prijema, plaćanje i PDF.
+ * U obrascu profila bi se ta logika pomešala sa čuvanjem ličnih podataka.
+ *
  * Kolone su tačno one koje tekst nabraja: ID fakture, naziv štamparije, grad,
  * numerisani proizvodi sa količinom u zagradi, ukupan iznos, i dugme „Otkaži" —
  * ali samo pored narudžbine u statusu „naručeno".

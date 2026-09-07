@@ -479,6 +479,38 @@ export class ProcurementController {
           return;
         }
 
+        /*
+         * ...i mora odgovarati onome sto se trazi.
+         *
+         * Nabavka pamti OPIS trazenog - naziv, kategoriju i potkategoriju - a
+         * ne pokazivac na proizvod (vidi model Procurement). Taj opis je do
+         * sada bio zapisan ali se NIJE koristio kao uslov, pa je stampar mogao
+         * na trazenu solju da odgovori duksom po niskoj ceni, pobedi
+         * licitaciju, i ustanovi izda fakturu za duksove.
+         *
+         * Uslov je POTKATEGORIJA, ne samo kategorija: i solje i duksevi su
+         * "Kreativne stampe", pa bi provera po kategoriji propustila bas taj
+         * slucaj.
+         *
+         * Unutar potkategorije stampar i dalje sme da ponudi svoju solju, po
+         * svojoj ceni - to i jeste licitacija. Potkategorija je specifikacija,
+         * a ne tacan artikal.
+         */
+        const istaKategorija = proizvod.categoryName === trazena.categoryName;
+        // Ako trazena stavka nema potkategoriju, poredi se samo kategorija.
+        const istaPotkategorija =
+          !trazena.subcategoryName || proizvod.subcategoryName === trazena.subcategoryName;
+
+        if (!istaKategorija || !istaPotkategorija) {
+          res.status(400).json({
+            message:
+              `Za „${trazena.name}“ morate ponuditi proizvod iz potkategorije ` +
+              `„${trazena.subcategoryName || trazena.categoryName}“. ` +
+              `Izabrali ste „${proizvod.name}“.`,
+          });
+          return;
+        }
+
         const iznos = cena * trazena.quantity;
         ukupno += iznos;
 

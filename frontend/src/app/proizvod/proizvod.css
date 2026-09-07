@@ -83,6 +83,10 @@
 .zakljucano ul { margin: 0 0 14px; padding-left: 18px; font-size: 14px; color: var(--mastilo-blago); }
 .zakljucano li { margin: 3px 0; }
 
+/* Link koji izgleda kao dugme: bez donje crte koju svaki <a> nosi po sistemu.
+   Ista klasa i ista svrha kao na ostalim stranama. */
+.veza { display: inline-block; border-bottom: 0; }
+
 @media (max-width: 860px) {
   .raspored { grid-template-columns: 1fr; gap: 26px; }
 }

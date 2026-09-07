@@ -1,144 +1,140 @@
-<div class="papir">
-  <span class="mark gl"></span>
-  <span class="mark gd"></span>
-  <span class="mark dl"></span>
-  <span class="mark dd"></span>
+<!--
+  Ovo nije zasebna strana nego ODELJAK PROFILA. Tekst zadatka traži tabelu
+  narudžbina „испод табеле са личним подацима", pa list papira, naslov i
+  podnožje dolaze od profila — ovde ih namerno nema, da se ne crtaju dvaput.
 
-  <div class="zaglavlje-lista">
-    <div>
-      <span class="nadnaslov">Knjiga faktura</span>
-      <h1 class="naslov-lista">Moje narudžbine</h1>
-    </div>
-    <span class="znacka" style="color: var(--mastilo)">Ukupno: {{ narudzbine.length }}</span>
+  Komponenta je i dalje zasebna jer je posao dovoljno velik sam za sebe:
+  sortiranje, otkazivanje, potvrda prijema, plaćanje i PDF. Ubačena u obrazac
+  profila, ta logika bi se pomešala sa čuvanjem ličnih podataka.
+-->
+
+@if (poruka) {
+  <p class="obavestenje" role="status">{{ poruka }}</p>
+}
+@if (greska) {
+  <p class="obavestenje lose" role="alert">{{ greska }}</p>
+}
+
+@if (ucitavanje) {
+  <p class="napomena">Učitavanje...</p>
+} @else if (!narudzbine.length) {
+  <p class="obavestenje">Još nemate nijednu narudžbinu.</p>
+  <div class="akcije">
+    <a routerLink="/klijent/pretraga" class="otisak veza">Idi na pretragu</a>
   </div>
-  <div class="crta"></div>
+} @else {
+  <p class="napomena" style="margin: 0 0 12px">
+    Ukupno narudžbina: <strong>{{ narudzbine.length }}</strong>. Sortira se
+    klikom na zaglavlje kolone.
+  </p>
 
-  @if (poruka) {
-    <p class="obavestenje" role="status">{{ poruka }}</p>
-  }
-  @if (greska) {
-    <p class="obavestenje lose" role="alert">{{ greska }}</p>
-  }
-
-  @if (ucitavanje) {
-    <p class="napomena">Učitavanje...</p>
-  } @else if (!narudzbine.length) {
-    <p class="obavestenje">Još nemate nijednu narudžbinu.</p>
-    <div class="akcije">
-      <a routerLink="/klijent/pretraga" class="otisak veza">Idi na pretragu</a>
-    </div>
-  } @else {
-    <div class="tabela-okvir">
-      <table>
-        <thead>
+  <div class="tabela-okvir">
+    <table>
+      <thead>
+        <tr>
+          <!-- Sortiranje se pokreće klikom na zaglavlje kolone. -->
+          <th class="sortiraj" (click)="sortiraj('number')">ID fakture{{ strelica('number') }}</th>
+          <th class="sortiraj" (click)="sortiraj('printer')">Štamparija{{ strelica('printer') }}</th>
+          <th class="sortiraj" (click)="sortiraj('city')">Grad{{ strelica('city') }}</th>
+          <th>Naručeni proizvodi</th>
+          <th class="sortiraj" (click)="sortiraj('total')">Iznos{{ strelica('total') }}</th>
+          <th class="sortiraj" (click)="sortiraj('status')">Status{{ strelica('status') }}</th>
+          <th class="sortiraj" (click)="sortiraj('date')">Datum{{ strelica('date') }}</th>
+          <th style="width: 150px"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (narudzbina of narudzbine; track narudzbina._id) {
           <tr>
-            <!-- Sortiranje se pokreće klikom na zaglavlje kolone. -->
-            <th class="sortiraj" (click)="sortiraj('number')">ID fakture{{ strelica('number') }}</th>
-            <th class="sortiraj" (click)="sortiraj('printer')">Štamparija{{ strelica('printer') }}</th>
-            <th class="sortiraj" (click)="sortiraj('city')">Grad{{ strelica('city') }}</th>
-            <th>Naručeni proizvodi</th>
-            <th class="sortiraj" (click)="sortiraj('total')">Iznos{{ strelica('total') }}</th>
-            <th class="sortiraj" (click)="sortiraj('status')">Status{{ strelica('status') }}</th>
-            <th class="sortiraj" (click)="sortiraj('date')">Datum{{ strelica('date') }}</th>
-            <th style="width: 150px"></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (narudzbina of narudzbine; track narudzbina._id) {
-            <tr>
-              <td class="jednosir">{{ narudzbina.number }}</td>
-              <td>{{ narudzbina.printerName }}</td>
-              <td class="prigusen">{{ narudzbina.printerCity }}</td>
+            <td class="jednosir">{{ narudzbina.number }}</td>
+            <td>{{ narudzbina.printerName }}</td>
+            <td class="prigusen">{{ narudzbina.printerCity }}</td>
 
-              <!--
-                Numerisani proizvodi, sa količinom u zagradi — tekst zadatka
-                traži baš takav prikaz u ovoj koloni.
-              -->
-              <td>
-                <ol class="proizvodi">
-                  @for (stavka of narudzbina.items; track stavka._id) {
-                    <li>
-                      {{ stavka.name }} ({{ stavka.quantity }})
-                      @if (stavka.printType) {
-                        <span class="sitno">{{ stavka.printType }}</span>
-                      }
-                    </li>
-                  }
-                </ol>
-              </td>
+            <!--
+              Numerisani proizvodi, sa količinom u zagradi — tekst zadatka
+              traži baš takav prikaz u ovoj koloni.
+            -->
+            <td>
+              <ol class="proizvodi">
+                @for (stavka of narudzbina.items; track stavka._id) {
+                  <li>
+                    {{ stavka.name }} ({{ stavka.quantity }})
+                    @if (stavka.printType) {
+                      <span class="sitno">{{ stavka.printType }}</span>
+                    }
+                  </li>
+                }
+              </ol>
+            </td>
 
-              <td class="jednosir">{{ narudzbina.total | number: '1.0-2' }} RSD</td>
-              <td>
-                <span class="znacka" [style.color]="bojaStatusa(narudzbina.status)">
-                  {{ nazivStatusa(narudzbina.status) }}
-                </span>
-              </td>
-              <td class="prigusen">{{ narudzbina.createdAt | date: 'dd.MM.yyyy.' }}</td>
-              <td>
-                <div class="dugmad">
-                  <button type="button" class="otisak tih" (click)="preuzmiPdf(narudzbina)">
-                    PDF
+            <td class="jednosir">{{ narudzbina.total | number: '1.0-2' }} RSD</td>
+            <td>
+              <span class="znacka" [style.color]="bojaStatusa(narudzbina.status)">
+                {{ nazivStatusa(narudzbina.status) }}
+              </span>
+            </td>
+            <td class="prigusen">{{ narudzbina.createdAt | date: 'dd.MM.yyyy.' }}</td>
+            <td>
+              <div class="dugmad">
+                <button type="button" class="otisak tih" (click)="preuzmiPdf(narudzbina)">
+                  PDF
+                </button>
+                @if (moziPlatiti(narudzbina)) {
+                  <button type="button" class="otisak mali" [disabled]="slanje"
+                          (click)="otvoriPlacanje(narudzbina)">
+                    Plati
                   </button>
-                  @if (moziPlatiti(narudzbina)) {
-                    <button type="button" class="otisak mali" [disabled]="slanje"
-                            (click)="otvoriPlacanje(narudzbina)">
-                      Plati
-                    </button>
-                  }
-                  @if (moziOtkazati(narudzbina)) {
-                    <button type="button" class="otisak obrnuti mali" [disabled]="slanje"
-                            (click)="potvrdiOtkazivanje(narudzbina)">
-                      Otkaži
-                    </button>
-                  }
-                  @if (moziPotvrditiPrijem(narudzbina)) {
-                    <button type="button" class="otisak tamni mali" [disabled]="slanje"
-                            (click)="potvrdiPrijem(narudzbina)">
-                      Primljeno
-                    </button>
-                  }
+                }
+                @if (moziOtkazati(narudzbina)) {
+                  <button type="button" class="otisak obrnuti mali" [disabled]="slanje"
+                          (click)="potvrdiOtkazivanje(narudzbina)">
+                    Otkaži
+                  </button>
+                }
+                @if (moziPotvrditiPrijem(narudzbina)) {
+                  <button type="button" class="otisak tamni mali" [disabled]="slanje"
+                          (click)="potvrdiPrijem(narudzbina)">
+                    Primljeno
+                  </button>
+                }
+              </div>
+            </td>
+          </tr>
+
+          <!-- ============ PLAĆANJE ============ -->
+          @if (uPlacanju === narudzbina._id) {
+            <tr>
+              <td colspan="8" class="red-forme">
+                <app-placanje
+                  [fakture]="zaPlacanje(narudzbina)"
+                  (placeno)="posleUplate(narudzbina)"
+                  (odustao)="uPlacanju = ''" />
+              </td>
+            </tr>
+          }
+
+          @if (zaOtkazivanje?._id === narudzbina._id) {
+            <tr>
+              <td colspan="8" class="red-forme">
+                <p class="obavestenje lose" style="margin: 0 0 14px">
+                  Otkazivanje narudžbine <strong>{{ narudzbina.number }}</strong> je trajno.
+                  Količine se vraćaju na lager štamparije.
+                </p>
+                <div class="dugmad">
+                  <button type="button" class="otisak mali" [disabled]="slanje" (click)="otkazi()">
+                    Da, otkaži
+                  </button>
+                  <button type="button" class="otisak tih" (click)="odustani()">Odustani</button>
                 </div>
               </td>
             </tr>
-
-            <!-- ============ PLAĆANJE ============ -->
-            @if (uPlacanju === narudzbina._id) {
-              <tr>
-                <td colspan="8" class="red-forme">
-                  <app-placanje
-                    [fakture]="zaPlacanje(narudzbina)"
-                    (placeno)="posleUplate(narudzbina)"
-                    (odustao)="uPlacanju = ''" />
-                </td>
-              </tr>
-            }
-
-            @if (zaOtkazivanje?._id === narudzbina._id) {
-              <tr>
-                <td colspan="8" class="red-forme">
-                  <p class="obavestenje lose" style="margin: 0 0 14px">
-                    Otkazivanje narudžbine <strong>{{ narudzbina.number }}</strong> je trajno.
-                    Količine se vraćaju na lager štamparije.
-                  </p>
-                  <div class="dugmad">
-                    <button type="button" class="otisak mali" [disabled]="slanje" (click)="otkazi()">
-                      Da, otkaži
-                    </button>
-                    <button type="button" class="otisak tih" (click)="odustani()">Odustani</button>
-                  </div>
-                </td>
-              </tr>
-            }
           }
-        </tbody>
-      </table>
-    </div>
-  }
-
-  <div class="podnozje-lista">
-    <span class="sitno">
-      Otkazuje se samo narudžbina za koju štampa nije započeta — status „naručeno".
-    </span>
-    <span class="sitno">PH &middot; knjiga faktura</span>
+        }
+      </tbody>
+    </table>
   </div>
-</div>
+
+  <p class="napomena" style="margin-top: 12px">
+    Otkazuje se samo narudžbina za koju štampa nije započeta — status „naručeno".
+  </p>
+}

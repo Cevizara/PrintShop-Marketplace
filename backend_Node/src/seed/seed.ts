@@ -393,9 +393,184 @@ async function main(): Promise<void> {
 
   // Brojac mora da nastavi odakle su stale seed fakture - inace bi prva nova
   // faktura dobila broj koji vec postoji i pala na jedinstvenom indeksu.
-  await baza.collection("counters").insertOne({ _id: "invoice", seq: brojacFaktura } as never);
+  // 10) Javna nabavka, zakljucena -------------------------------------------
+  /*
+   * Zasto seed pravi i jednu nabavku:
+   *
+   * Bez nje se "Javne nabavke" (crna stavka) i "Izvestavanje" (crvena) na
+   * svezoj bazi otvaraju kao PRAZNA STRANA. Da bi se ista videlo, morala bi se
+   * uzivo raspisati nabavka, prijaviti tri stamparije, i cekati da istekne rok
+   * od deset minuta - lose mesto za stajanje na odbrani. Tekst zadatka trazi
+   * bazu "popunjenu sa dovoljnom kolicinom podataka, kako bi bio omogucen
+   * pregled SVIH realizovanih funkcionalnosti", pod pretnjom -5 poena.
+   *
+   * ================== ZASTO NAJJEFTINIJA PONUDA NE POBEDJUJE ==================
+   *
+   * Ovo je namerno. Tekst zadatka trazi da nabavku dobije stamparija koja je
+   * imala "najnizu ukupnu ponudu I dovoljnu kolicinu svakog proizvoda na
+   * stanju" - dakle DVA uslova, ne jedan.
+   *
+   * Nis Print Centar daje najnizu ponudu, ali nema dovoljno ni polo majica
+   * (40 na stanju, trazi se 50) ni solja (25 na stanju, trazi se 100), pa
+   * ispada. Posao dobija Copy Studio, drugi po ceni ali jedini koji od
+   * najjeftinijih moze da isporuci.
+   *
+   * Tako se oba uslova vide na jednom ekranu. Ako se ikad pozeli obican
+   * slucaj - najjeftiniji pobedjuje - dovoljno je traziti manje komada.
+   */
+  const ustanova = pravnaLica[0];
+  const poSifri = (sifra: string) => proizvodi.find((p) => p.code === sifra)!;
 
-  // 10) Izvestaj ------------------------------------------------------------
+  // Sta se trazi. Ovo je OPIS, ne pokazivac na proizvod - vidi model Procurement.
+  const TRAZENO: { sifraUzora: string; kolicina: number }[] = [
+    { sifraUzora: "PR-001", kolicina: 50 },   // polo majice
+    { sifraUzora: "PR-002", kolicina: 100 },  // solje
+    { sifraUzora: "PR-004", kolicina: 1000 }, // vizit karte
+  ];
+
+  const nabavkaId = oid();
+  const raspisana = danaRanije(9);
+  // Rok je deset minuta od raspisivanja, tacno kako trazi tekst zadatka.
+  const rok = new Date(raspisana.getTime() + 10 * 60 * 1000);
+
+  const stavkeNabavke = TRAZENO.map(({ sifraUzora, kolicina }) => {
+    const uzor = poSifri(sifraUzora);
+    return {
+      _id: oid(),
+      name: uzor.name,
+      categoryName: uzor.categoryName,
+      subcategoryName: uzor.subcategoryName,
+      quantity: kolicina,
+      sourceProductId: uzor._id,
+    };
+  });
+
+  /*
+   * Cime svaka stamparija pokriva koju trazenu stavku.
+   *
+   * Isti proizvod se kod tri stamparije zove razlicito - "Pamucna polo
+   * majica" / "Polo majica pamuk 200g" / "Polo majica klasik" - i bas zato
+   * nabavka pamti opis, a stampar u ponudi sam imenuje SVOJ proizvod.
+   */
+  const PONUDE: { stampar: number; sifre: string[] }[] = [
+    { stampar: 0, sifre: ["PR-001", "PR-002", "PR-004"] }, // Copy Studio
+    { stampar: 1, sifre: ["PR-011", "PR-013", "PR-015"] }, // Print Novi Sad
+    { stampar: 2, sifre: ["PR-012", "PR-014", "PR-016"] }, // Nis Print Centar
+  ];
+
+  const ponude = PONUDE.map(({ stampar, sifre }) => {
+    const redovi = sifre.map((sifra, redni) => {
+      const proizvod = poSifri(sifra);
+      const kolicina = stavkeNabavke[redni].quantity;
+
+      return {
+        _id: oid(),
+        itemId: stavkeNabavke[redni]._id,
+        productId: proizvod._id,
+        productName: proizvod.name,
+        productCode: proizvod.code,
+        unitPrice: proizvod.unitPrice,
+        quantity: kolicina,
+        lineTotal: proizvod.unitPrice * kolicina,
+      };
+    });
+
+    return {
+      _id: oid(),
+      procurementId: nabavkaId,
+      printerId: stamparije[stampar]._id,
+      lines: redovi,
+      total: redovi.reduce((zbir, r) => zbir + r.lineTotal, 0),
+      // Ponude stizu tokom trajanja licitacije, ne sve u istoj sekundi.
+      createdAt: new Date(raspisana.getTime() + (stampar + 1) * 2 * 60 * 1000),
+    };
+  });
+
+  await baza.collection("bids").insertMany(ponude as never[]);
+
+  /*
+   * Pobednik se BIRA, ne upisuje rucno - istim pravilom koje primenjuje i
+   * server: najniza ponuda koja ima pokrice na lageru. Da je pobednik upisan
+   * kao konstanta, promena bilo koje cene ili lagera bi tiho napravila seed
+   * koji protivreci sam sebi.
+   */
+  const pobednik = [...ponude]
+    .sort((a, b) => a.total - b.total)
+    .find((ponuda) =>
+      ponuda.lines.every((red) => {
+        const proizvod = proizvodi.find((p) => String(p._id) === String(red.productId))!;
+        return proizvod.stock >= red.quantity;
+      })
+    )!;
+
+  const zakljucena = new Date(rok.getTime() + 3 * 60 * 1000);
+  brojacFaktura++;
+
+  const fakturaNabavke = {
+    _id: oid(),
+    number: `PH-${zakljucena.getFullYear()}-${String(brojacFaktura).padStart(4, "0")}`,
+    clientId: ustanova._id,
+    printerId: pobednik.printerId,
+    items: pobednik.lines.map((red) => ({
+      _id: oid(),
+      productId: red.productId,
+      code: red.productCode,
+      name: red.productName,
+      unitPrice: red.unitPrice,
+      quantity: red.quantity,
+      color: "Bela",
+      printType: "",
+      extraPricePerPiece: 0,
+      printText: "",
+      printImage: "",
+      printX: 50,
+      printY: 50,
+      printScale: 46,
+      lineTotal: red.lineTotal,
+    })),
+    total: pobednik.total,
+    // Tekst zadatka: pobednik se fakturise odmah "u stampi" - preskace se
+    // "naruceno", jer je licitacija vec odigrala ulogu potvrde.
+    status: "PRINTING",
+    procurementId: nabavkaId,
+    createdAt: zakljucena,
+    updatedAt: zakljucena,
+  };
+
+  await baza.collection("invoices").insertOne(fakturaNabavke as never);
+
+  await baza.collection("procurements").insertOne({
+    _id: nabavkaId,
+    number: `JN-${raspisana.getFullYear()}-0001`,
+    clientId: ustanova._id,
+    items: stavkeNabavke,
+    createdAt: raspisana,
+    deadline: rok,
+    status: "AWARDED",
+    settledAt: zakljucena,
+    winnerPrinterId: pobednik.printerId,
+    winnerBidId: pobednik._id,
+    winnerTotal: pobednik.total,
+    invoiceId: fakturaNabavke._id,
+  } as never);
+
+  /*
+   * Lager pobednika se skida, isto kao sto bi ga skinulo pravo zakljucivanje.
+   * Bez ovoga bi baza tvrdila da je posao dodeljen, a da roba nije nigde otisla.
+   */
+  for (const red of pobednik.lines) {
+    await baza
+      .collection("products")
+      .updateOne({ _id: red.productId }, { $inc: { stock: -red.quantity } });
+  }
+
+  // Brojac mora da nastavi odakle su stale seed fakture - inace bi prva nova
+  // faktura dobila broj koji vec postoji i pala na jedinstvenom indeksu.
+  await baza.collection("counters").insertOne({ _id: "invoice", seq: brojacFaktura } as never);
+  // Isto vazi i za brojac nabavki: sledeca raspisana mora da bude JN-...-0002.
+  await baza.collection("counters").insertOne({ _id: "procurement", seq: 1 } as never);
+
+  // 11) Izvestaj ------------------------------------------------------------
   const nalozi = [
     ["admin", "Admin123!", "administrator, prijava na /admin/prijava"],
     ...STAMPARIJE.map((s) => [s.username, s.password, "štamparija, " + s.institution.city]),
@@ -404,7 +579,12 @@ async function main(): Promise<void> {
   ];
 
   console.log("");
-  console.log(`Upisano: ${kategorije.length} kategorije, ${proizvodi.length} proizvoda, ${ocene.length} ocena, ${fakture.length} faktura.`);
+  console.log(`Upisano: ${kategorije.length} kategorije, ${proizvodi.length} proizvoda, ${ocene.length} ocena, ${fakture.length + 1} faktura.`);
+  console.log(
+    `Javna nabavka JN-${raspisana.getFullYear()}-0001: ${ponude.length} ponude, ` +
+      `dobila je ${STAMPARIJE[PONUDE.findIndex((p) => String(stamparije[p.stampar]._id) === String(pobednik.printerId))].institution.name} ` +
+      `sa ${pobednik.total.toLocaleString("sr-RS")} RSD.`
+  );
   console.log("");
   console.log("Nalozi za prijavu:");
   for (const [korisnik, lozinka, opis] of nalozi) {

@@ -1,27 +1,4 @@
-<!--
-  Kutije sa obe strane lista. Nisu podatak nego ukras: korpa je jedina strana
-  na kojoj se nešto pakuje, pa je i jedina koja ih ima. Crtane su u SVG-u iz
-  istog razloga kao slike proizvoda — običan tekst, bez fajla koji se učitava.
-  Na užem ekranu se sklanjaju, da ne otimaju prostor sadržaju.
--->
-<div class="sa-kutijama">
-
-  <svg class="kutija leva" viewBox="0 0 200 260" aria-hidden="true">
-    <!-- otvoreni preklopi -->
-    <path d="M24 62 L54 30 L146 30 L176 62 Z" fill="#B9985F" stroke="#6E5427" stroke-width="2.5" stroke-linejoin="round"/>
-    <path d="M24 62 L54 30 L100 30 L100 62 Z" fill="#CBA76B" stroke="#6E5427" stroke-width="2.5" stroke-linejoin="round"/>
-    <!-- telo -->
-    <rect x="24" y="62" width="152" height="164" fill="#C9A468" stroke="#6E5427" stroke-width="2.5"/>
-    <!-- traka -->
-    <rect x="88" y="62" width="24" height="164" fill="#E4D3AE" opacity=".75"/>
-    <path d="M24 108 L176 108" stroke="#6E5427" stroke-width="2" opacity=".35"/>
-    <!-- oznaka za lomljivo -->
-    <g stroke="#6E5427" stroke-width="2" fill="none" opacity=".5">
-      <path d="M44 140 h30 M44 152 h22 M44 164 h30"/>
-    </g>
-  </svg>
-
-  <div class="papir">
+<div class="papir">
   <span class="mark gl"></span>
   <span class="mark gd"></span>
   <span class="mark dl"></span>
@@ -138,8 +115,8 @@
     } @else {
       <p class="napomena" style="margin-top: 16px">
         @if (platiKasnije) {
-          Narudžbine su u statusu „naručeno". Fakture možete platiti kasnije, sa
-          strane <a routerLink="/klijent/narudzbine">Narudžbine</a>.
+          Narudžbine su u statusu „naručeno". Fakture možete platiti kasnije, iz
+          tabele narudžbina na <a routerLink="/profil" fragment="narudzbine">svom profilu</a>.
         } @else {
           Plaćene narudžbine čekaju da ih štamparija prebaci u status „u štampi".
         }
@@ -147,7 +124,7 @@
       </p>
 
       <div class="akcije">
-        <a routerLink="/klijent/narudzbine" class="otisak veza">Moje narudžbine</a>
+        <a routerLink="/profil" fragment="narudzbine" class="otisak veza">Moje narudžbine</a>
         <a routerLink="/klijent/pretraga" class="otisak tih veza">Nastavi kupovinu</a>
       </div>
     }
@@ -326,18 +303,4 @@
     <span class="sitno">Lager se skida tek pritiskom na „Potvrdi".</span>
     <span class="sitno">PH &middot; e-korpa</span>
   </div>
-  </div>
-
-  <svg class="kutija desna" viewBox="0 0 200 260" aria-hidden="true">
-    <!-- zatvorena, zalepljena kutija -->
-    <path d="M24 54 L100 22 L176 54 L100 86 Z" fill="#CBA76B" stroke="#6E5427" stroke-width="2.5" stroke-linejoin="round"/>
-    <path d="M24 54 L24 210 L100 242 L100 86 Z" fill="#BE9A5D" stroke="#6E5427" stroke-width="2.5" stroke-linejoin="round"/>
-    <path d="M176 54 L176 210 L100 242 L100 86 Z" fill="#A98A52" stroke="#6E5427" stroke-width="2.5" stroke-linejoin="round"/>
-    <!-- traka preko poklopca -->
-    <path d="M62 38 L138 70" stroke="#E4D3AE" stroke-width="12" opacity=".8"/>
-    <!-- nalepnica -->
-    <rect x="38" y="120" width="46" height="34" rx="2" fill="#EFE3C6" stroke="#6E5427" stroke-width="1.5" opacity=".9"
-          transform="rotate(11 61 137)"/>
-  </svg>
-
 </div>

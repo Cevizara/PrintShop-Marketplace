@@ -77,6 +77,25 @@ nalog nema šifre `PR-001` do `PR-003`, pa uvoz prolazi u celini.
 Prijava administratora je na **posebnoj ruti** `/admin/prijava` i nigde nije
 povezana linkom sa javnog dela sajta — tako traži tekst zadatka.
 
+### Javne nabavke — šta se vidi odmah
+
+Nalog `etf` ima jednu **već zaključenu** nabavku `JN-2026-0001`, sa tri ponude i
+PDF izveštajem — da se licitacije vide bez čekanja da rok od deset minuta
+istekne.
+
+**Pobedila je druga po ceni, i to je ispravno.** Tekst zadatka traži najnižu
+ponudu **i** dovoljnu količinu svakog proizvoda na stanju:
+
+| Štamparija | Ponuda | |
+|---|---|---|
+| Niš Print Centar | 95.500 | najniža, ali nema dovoljno majica ni šolja |
+| **Copy Studio Kumanovska** | **104.000** | **dobila nabavku** |
+| Print Novi Sad | 107.500 | pokriva sve, ali skuplja |
+
+Da se vidi **otvorena** licitacija i slanje ponude, treba je raspisati uživo:
+kao `etf` ubaciti proizvode u korpu i pritisnuti POTVRDI, pa se prijaviti kao
+štamparije i poslati ponude.
+
 ---
 
 ## Šta je do sada urađeno
@@ -95,7 +114,7 @@ povezana linkom sa javnog dela sajta — tako traži tekst zadatka.
 | Mapa štamparije u proširenim detaljima | gotovo |
 | Administrator: grafikon kretanja ocene kroz vreme | gotovo |
 | Priprema proizvoda, e-korpa, zatvaranje narudžbine | gotovo |
-| Tabela narudžbina, otkazivanje, promena statusa | gotovo |
+| Tabela narudžbina (na profilu), otkazivanje, promena statusa | gotovo |
 | Javne nabavke i licitacije | gotovo |
 | Ocene, komentari, arhiva proizvoda | gotovo |
 | PDF faktura na i-mejl, PDF izveštaj o licitacijama | gotovo |
@@ -154,6 +173,37 @@ MAIL_FROM=Printing House <faktura@primer.rs>
 
 Slanje **nikada ne obara narudžbinu**: ako padne, faktura je već izdata i PDF se
 i dalje preuzima sa strane „Narudžbine". Ethereal traži internet; preuzimanje ne.
+
+### Plaćanje karticom
+
+Radi na dva načina, i sam bira koji:
+
+- **bez podešavanja** — naplatu rešava server, sa Stripe-ovim zvaničnim
+  brojevima test kartica. Radi i bez interneta.
+- **sa test ključem u `.env`** — ide pravi poziv ka Stripe-u (Test Mode).
+
+Za pravi poziv, uzeti besplatan **test** ključ sa
+`dashboard.stripe.com/test/apikeys` i upisati:
+
+```
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_CURRENCY=rsd
+```
+
+Ako Stripe odbije valutu — nalog otvoren van Srbije često ne može da naplati u
+dinarima — staviti `STRIPE_CURRENCY=eur`.
+
+Odgovor servera posle plaćanja nosi polje **`engine`**: `"stripe"` ako je poziv
+zaista otišao, `"lokalno"` ako je odlučio server. Tako se ne pogađa.
+
+Ako poziv ka Stripe-u padne — nema mreže, ključ ne valja, valuta nije podržana —
+naplata **ne puca** nego prelazi na lokalnu odluku, a razlog se ispiše u
+konzoli. Odbijena kartica nije takav slučaj: to je legitiman ishod i klijent
+vidi razlog.
+
+Brojevi test kartica: `4242 4242 4242 4242` prolazi, `4000 0000 0000 0002`
+banka odbija, `4000 0000 0000 9995` nema sredstava, `4000 0000 0000 0069`
+istekla. Broj kartice i CVC se **nikada** ne upisuju u bazu.
 
 ### PDF i naša slova
 

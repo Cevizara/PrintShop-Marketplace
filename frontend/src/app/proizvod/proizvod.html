@@ -67,18 +67,37 @@
           </div>
         </dl>
 
+        <!--
+          Ovo je JAVNI karton, pa ga otvara i prijavljen klijent - dođe do
+          njega iz pretrage na početnoj ili preko sačuvanog linka. Ranije mu je
+          i tada pisalo „Prijavite se" i vodilo ga na obrazac za prijavu, iako
+          je već prijavljen. Ponuda zato zavisi od toga ko gleda.
+        -->
         <div class="zakljucano">
-          <h3>Dostupno prijavljenim klijentima</h3>
+          @if (jeKlijent) {
+            <h3>Prošireni podaci su vam dostupni</h3>
+          } @else {
+            <h3>Dostupno prijavljenim klijentima</h3>
+          }
+
           <ul>
             <li>cena po komadu i duži opis</li>
             <li>dostupne boje</li>
             <li>vrste štampe sa maksimalnim dimenzijama</li>
             <li>mapa sa lokacijom štamparije</li>
           </ul>
-          <a routerLink="/prijava" class="otisak tamni mali"
-             style="display: inline-block; border-bottom: 0">
-            Prijavite se
-          </a>
+
+          @if (jeKlijent) {
+            <a [routerLink]="['/klijent/proizvod', proizvod._id]" class="otisak tamni mali veza">
+              Prošireni detalji
+            </a>
+          } @else if (prijavljen) {
+            <!-- Štampar i administrator su prijavljeni, ali prošireni karton
+                 je klijentska strana - njima nema šta da se ponudi. -->
+            <p class="napomena">Prošireni prikaz je namenjen klijentima.</p>
+          } @else {
+            <a routerLink="/prijava" class="otisak tamni mali veza">Prijavite se</a>
+          }
         </div>
       </div>
 

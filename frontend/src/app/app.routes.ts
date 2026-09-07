@@ -56,12 +56,9 @@ export const routes: Routes = [
     canActivate: [rolaGuard('CLIENT_INDIVIDUAL', 'CLIENT_COMPANY')],
     loadComponent: () => import('./klijent-korpa/klijent-korpa').then((m) => m.KlijentKorpa),
   },
-  {
-    path: 'klijent/narudzbine',
-    canActivate: [rolaGuard('CLIENT_INDIVIDUAL', 'CLIENT_COMPANY')],
-    loadComponent: () =>
-      import('./klijent-narudzbine/klijent-narudzbine').then((m) => m.KlijentNarudzbine),
-  },
+  // Rute `klijent/narudzbine` više nema: tekst zadatka traži tabelu narudžbina
+  // „испод табеле са личним подацима", pa je ona sada odeljak profila. Sve što
+  // je na nju pokazivalo sada vodi na `/profil` sa oznakom `#narudzbine`.
   {
     path: 'klijent/nabavke',
     canActivate: [rolaGuard('CLIENT_COMPANY')],

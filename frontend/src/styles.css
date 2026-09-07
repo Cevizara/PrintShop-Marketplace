@@ -212,6 +212,24 @@ html { scrollbar-width: thin; scrollbar-color: #3A352E transparent; }
 }
 .papir a { color: var(--magenta); }
 
+/*
+  Dugme ostaje dugme i na listu papira.
+
+  Pravilo iznad važi za linkove U TEKSTU, ali ne sme da važi za dugmad.
+  `.papir a` je specifičnije od `.otisak` (jedna klasa + element protiv same
+  jedne klase), pa je nadjačavalo boju slova: <a class="otisak"> je dobijao
+  magenta slova na magenta podlozi i bukvalno se nije video, a
+  <a class="otisak tamni"> magenta slova na mastilu. Varijante `obrnuti` i
+  `tih` imaju po dve klase, pa su se izvukle same - zato je greška izgledala
+  kao da se tiče samo nekih dugmadi.
+
+  Obična <button> dugmad nikad nisu bila pogođena; samo linkovi koji izgledaju
+  kao dugme.
+*/
+.papir a.otisak { color: var(--papir); }
+.papir a.otisak.obrnuti { color: var(--mastilo); }
+.papir a.otisak.tih { color: var(--mastilo-blago); }
+
 /* registarski markovi u uglovima lista */
 .mark { position: absolute; width: 16px; height: 16px; pointer-events: none; }
 .mark.gl { top: 12px; left: 12px; border-top: 1px solid #C0B8A8; border-left: 1px solid #C0B8A8; }

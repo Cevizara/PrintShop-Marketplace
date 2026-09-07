@@ -325,11 +325,19 @@ export class InvoiceController {
         return;
       }
 
-      const ishod = naplati({
-        number: String(req.body.cardNumber ?? ""),
-        cvc: String(req.body.cvc ?? ""),
-        expiry: String(req.body.expiry ?? ""),
-      });
+      // Iznos se racuna PRE naplate, jer naplata treba da zna koliko skida.
+      // Zbir svih izabranih faktura - tekst zadatka kaze "fakturu/fakture", pa
+      // jedna kartica moze da plati vise njih odjednom.
+      const iznos = fakture.reduce((zbir, f) => zbir + f.total, 0);
+
+      const ishod = await naplati(
+        {
+          number: String(req.body.cardNumber ?? ""),
+          cvc: String(req.body.cvc ?? ""),
+          expiry: String(req.body.expiry ?? ""),
+        },
+        iznos
+      );
 
       if (!ishod.uspesno) {
         // Ništa se ne menja. Klijent ponavlja korak plaćanja.
@@ -338,7 +346,6 @@ export class InvoiceController {
       }
 
       const sada = new Date();
-      const iznos = fakture.reduce((zbir, f) => zbir + f.total, 0);
 
       for (const faktura of fakture) {
         faktura.status = "PAID";
@@ -360,6 +367,9 @@ export class InvoiceController {
         brand: ishod.brend,
         last4: ishod.poslednje4,
         reference: ishod.oznaka,
+        // Koji nacin je odlucio: "stripe" ili "lokalno". Vraca se da se na
+        // odbrani ne pogadja da li je poziv ka Stripe-u zaista otisao.
+        engine: ishod.motor,
       });
     } catch (greska) {
       console.error("plati:", greska);

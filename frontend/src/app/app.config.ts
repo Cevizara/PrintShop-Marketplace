@@ -13,7 +13,13 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'top' })),
+    // `anchorScrolling` je potreban da bi `fragment="narudzbine"` zaista spustio
+    // stranu do tabele narudžbina na profilu. Bez njega Angular oznaku u adresi
+    // prihvati, ali ne pomeri stranu - link tiho ne radi ono što obećava.
+    provideRouter(
+      routes,
+      withInMemoryScrolling({ scrollPositionRestoration: 'top', anchorScrolling: 'enabled' })
+    ),
     // Interceptor dodaje JWT token uz svaki zahtev ka serveru.
     provideHttpClient(withInterceptors([authInterceptor])),
   ],

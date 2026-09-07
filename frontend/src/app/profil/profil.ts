@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { KlijentNarudzbine } from '../klijent-narudzbine/klijent-narudzbine';
 import { Korisnik } from '../models/models';
 import { slikaUrl } from '../services/api';
 import { AuthService } from '../services/auth.service';
@@ -16,10 +17,14 @@ import { PodaciProfila, UserService } from '../services/user.service';
  *
  * Korisničko ime se prikazuje ali se NE menja - tako traži tekst zadatka.
  * Polje je zato onemogućeno, a server ga i ne čita iz zahteva.
+ *
+ * Ispod obrasca stoji i tabela narudžbina, jer je tekst zadatka traži baš tu:
+ * „испод табеле са личним подацима". Ranije je bila zasebna strana. Tabela je
+ * ostala u svojoj komponenti - vidi `KlijentNarudzbine`.
  */
 @Component({
   selector: 'app-profil',
-  imports: [DatePipe, FormsModule],
+  imports: [DatePipe, FormsModule, KlijentNarudzbine],
   templateUrl: './profil.html',
   styleUrl: './profil.css',
 })
@@ -86,6 +91,29 @@ export class Profil implements OnInit {
 
   get naslovDrugogOdeljka(): string {
     return this.jeInstitucija ? 'Odgovorno lice' : 'Lični podaci';
+  }
+
+  /**
+   * Tabelu narudžbina ispod ličnih podataka vide samo klijenti.
+   *
+   * Štampar svoje narudžbine ima na svojoj strani, sa drugim dugmadima —
+   * on menja status, a ne otkazuje. Administrator narudžbine nema uopšte.
+   */
+  get jeKlijent(): boolean {
+    return (
+      this.korisnik?.type === 'CLIENT_INDIVIDUAL' || this.korisnik?.type === 'CLIENT_COMPANY'
+    );
+  }
+
+  /**
+   * Redni broj odeljka sa narudžbinama, rimskim brojem kao i ostali.
+   *
+   * Računa se, a ne piše kao konstanta: pravno lice iznad ima i odeljak sa
+   * podacima o instituciji, a fizičko lice nema — pa narudžbine kod jednog
+   * dolaze četvrte, a kod drugog treće.
+   */
+  get brojOdeljkaNarudzbina(): string {
+    return this.jeInstitucija ? 'IV' : 'III';
   }
 
   ngOnInit(): void {
