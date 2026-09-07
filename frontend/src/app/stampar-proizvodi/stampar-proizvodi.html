@@ -124,8 +124,21 @@
                   </div>
 
                   <div class="galerija-sada">
-                    @for (putanja of [proizvod.mainImage].concat(proizvod.additionalImages); track putanja) {
-                      <img [src]="slika(putanja)" [alt]="proizvod.name" class="minijatura krupna" />
+                    <div class="slika-glavna">
+                      <img [src]="slika(proizvod.mainImage)" [alt]="proizvod.name + ' — glavna slika'"
+                           class="minijatura krupna" />
+                      <span class="sitno">Glavna</span>
+                    </div>
+                    @for (putanja of proizvod.additionalImages; track putanja; let i = $index) {
+                      <div class="slika-glavna">
+                        <img [src]="slika(putanja)" [alt]="proizvod.name + ' — slika ' + (i + 2)"
+                             class="minijatura krupna" />
+                        <button type="button" class="otisak tih veoma-mali"
+                                [disabled]="menjanjeGlavne === proizvod._id"
+                                (click)="postaviGlavnuSliku(proizvod, putanja)">
+                          Postavi kao glavnu
+                        </button>
+                      </div>
                     }
                   </div>
 

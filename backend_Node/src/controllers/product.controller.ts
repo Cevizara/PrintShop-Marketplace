@@ -310,6 +310,53 @@ export class ProductController {
   };
 
   /**
+   * Postavlja vec otpremljenu sliku iz galerije za naslovnu sliku proizvoda.
+   *
+   * Ne prima putanju proizvoljnog fajla: nova glavna mora vec da bude medju
+   * dodatnim slikama bas tog proizvoda prijavljenog stampara. Stara glavna
+   * zauzima njeno mesto u galeriji, pa proizvod i dalje ima isti broj slika i
+   * nijedan fajl se ne brise.
+   */
+  postaviGlavnuSliku = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const id = String(req.params.id);
+      const putanja = String(req.body.image ?? "");
+
+      if (!Types.ObjectId.isValid(id)) {
+        res.status(400).json({ message: "Neispravan identifikator proizvoda." });
+        return;
+      }
+
+      const proizvod = await Product.findOne({ _id: id, printerId: req.user!.id });
+      if (!proizvod) {
+        res.status(404).json({ message: "Proizvod nije pronađen među vašim proizvodima." });
+        return;
+      }
+
+      const mesto = proizvod.additionalImages.indexOf(putanja);
+      if (mesto < 0) {
+        res.status(400).json({ message: "Izabrana slika nije deo galerije ovog proizvoda." });
+        return;
+      }
+
+      const staraGlavna = proizvod.mainImage;
+      proizvod.mainImage = putanja;
+      proizvod.additionalImages[mesto] = staraGlavna;
+
+      await proizvod.save();
+      await proizvod.populate("printerId", POLJA_STAMPARA);
+
+      res.json({
+        message: `Glavna slika za "${proizvod.name}" je promenjena.`,
+        product: pungProizvod(proizvod),
+      });
+    } catch (greska) {
+      console.error("postaviGlavnuSliku:", greska);
+      res.status(500).json({ message: "Greška na serveru." });
+    }
+  };
+
+  /**
    * Uvoz lager liste iz JSON fajla (Prilog 1 teksta zadatka).
    *
    * Dve odluke koje se ne vide iz koda:

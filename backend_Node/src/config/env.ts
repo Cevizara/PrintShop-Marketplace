@@ -41,5 +41,8 @@ export const env = {
    * Srbije cesto ne moze da naplati u RSD, pa se prelazi na "eur".
    */
   stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
+  // Javni ključ sme u pregledač, ali ga server vraća tek uz odgovarajući
+  // PaymentIntent prijavljenog klijenta.
+  stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY || "",
   stripeCurrency: (process.env.STRIPE_CURRENCY || "rsd").toLowerCase(),
 };

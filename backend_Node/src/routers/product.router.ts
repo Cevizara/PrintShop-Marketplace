@@ -49,6 +49,10 @@ productRouter
   .post(autentikacija, dozvoli("PRINTER"), slikeProizvoda, kontroler.dodajSlike);
 
 productRouter
+  .route("/:id/main-image")
+  .patch(autentikacija, dozvoli("PRINTER"), kontroler.postaviGlavnuSliku);
+
+productRouter
   .route("/:id")
   .get(autentikacija, dozvoli(...KLIJENTI), kontroler.detalji);
 

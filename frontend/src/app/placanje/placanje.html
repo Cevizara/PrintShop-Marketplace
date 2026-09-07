@@ -1,5 +1,4 @@
 <div class="placanje">
-
   <div class="odeljak" style="margin-top: 0">
     <span class="broj">01</span>
     <span class="tekst">Plaćanje karticom</span>
@@ -8,9 +7,9 @@
 
   @if (uspeh) {
     <p class="obavestenje" role="status">{{ uspeh }}</p>
+  } @else if (ucitava) {
+    <p class="obavestenje" role="status">Priprema bezbednog plaćanja…</p>
   } @else {
-
-    <!-- ============ ŠTA SE PLAĆA ============ -->
     <div class="racun">
       @for (faktura of fakture; track faktura._id) {
         <div class="red">
@@ -28,83 +27,64 @@
       <p class="obavestenje lose" role="alert">{{ greska }}</p>
     }
 
-    <!-- ============ KARTICA ============ -->
-    <div class="kartica">
-      <div class="kartica-vrh">
-        <span class="cip"></span>
-        <span class="tip-kartice">{{ tip }}</span>
-      </div>
-      <div class="kartica-broj jednosir">{{ broj || '•••• •••• •••• ••••' }}</div>
-      <div class="kartica-dno">
-        <span class="sitno">{{ vlasnik || 'VLASNIK KARTICE' }}</span>
-        <span class="sitno">{{ rok || 'MM/GG' }}</span>
-      </div>
-    </div>
-
     <div class="polja" style="margin-top: 20px">
-      <div class="par">
-        <div class="polje">
-          <label for="pl-tip">Tip kartice</label>
-          <select id="pl-tip" name="pl-tip" [(ngModel)]="tip">
-            @for (t of tipovi; track t) {
-              <option [value]="t">{{ t }}</option>
-            }
-          </select>
-          <span class="napomena">Server tip izvodi iz samog broja kartice.</span>
-        </div>
-
-        <div class="polje">
-          <label for="pl-vlasnik">Vlasnik kartice</label>
-          <input id="pl-vlasnik" name="pl-vlasnik" type="text" [(ngModel)]="vlasnik"
-                 placeholder="Ime i prezime sa kartice" />
-        </div>
-      </div>
-
       <div class="polje">
-        <label for="pl-broj">Broj kartice</label>
-        <input id="pl-broj" name="pl-broj" type="text" inputmode="numeric" class="jednosir"
-               [ngModel]="broj" (ngModelChange)="formatirajBroj($event)"
-               placeholder="4242 4242 4242 4242" autocomplete="off" />
+        <label for="pl-vlasnik">Vlasnik kartice</label>
+        <input id="pl-vlasnik" name="pl-vlasnik" type="text" [(ngModel)]="vlasnik"
+               placeholder="Ime i prezime sa kartice" autocomplete="cc-name" />
       </div>
 
-      <div class="par">
+      @if (rezim === 'stripe') {
         <div class="polje">
-          <label for="pl-rok">Datum isticanja (MM/GG)</label>
-          <input id="pl-rok" name="pl-rok" type="text" inputmode="numeric" class="jednosir"
-                 maxlength="5" [ngModel]="rok" (ngModelChange)="formatirajRok($event)"
-                 placeholder="12/28" autocomplete="off" />
+          <label>Podaci kartice</label>
+          <div #stripeKartica class="stripe-kartica" aria-label="Broj kartice, datum isticanja i CVC"></div>
+          <span class="napomena">Podaci kartice idu direktno Stripe-u; Printing House ih ne prima niti čuva.</span>
         </div>
-
-        <div class="polje">
-          <label for="pl-cvc">CVC kod</label>
-          <input id="pl-cvc" name="pl-cvc" type="text" inputmode="numeric" class="jednosir"
-                 maxlength="4" [(ngModel)]="cvc" placeholder="123" autocomplete="off" />
+      } @else if (rezim === 'local') {
+        <div class="par">
+          <div class="polje">
+            <label for="pl-tip">Tip kartice</label>
+            <select id="pl-tip" name="pl-tip" [(ngModel)]="tip">
+              @for (tipKartice of tipovi; track tipKartice) {
+                <option [value]="tipKartice">{{ tipKartice }}</option>
+              }
+            </select>
+          </div>
+          <div class="polje">
+            <label for="pl-broj">Broj kartice</label>
+            <input id="pl-broj" name="pl-broj" type="text" inputmode="numeric" class="jednosir"
+                   [ngModel]="broj" (ngModelChange)="formatirajBroj($event)"
+                   placeholder="4242 4242 4242 4242" autocomplete="off" />
+          </div>
         </div>
-      </div>
+        <div class="par">
+          <div class="polje">
+            <label for="pl-rok">Datum isticanja (MM/GG)</label>
+            <input id="pl-rok" name="pl-rok" type="text" inputmode="numeric" class="jednosir"
+                   maxlength="5" [ngModel]="rok" (ngModelChange)="formatirajRok($event)"
+                   placeholder="12/34" autocomplete="off" />
+          </div>
+          <div class="polje">
+            <label for="pl-cvc">CVC kod</label>
+            <input id="pl-cvc" name="pl-cvc" type="text" inputmode="numeric" class="jednosir"
+                   maxlength="4" [(ngModel)]="cvc" placeholder="123" autocomplete="off" />
+          </div>
+        </div>
+      }
     </div>
 
     <div class="dugmad">
-      <button type="button" class="otisak" [disabled]="slanje" (click)="plati()">
+      <button type="button" class="otisak" [disabled]="slanje || !rezim" (click)="plati()">
         Plati {{ ukupno | number: '1.0-2' }} RSD
       </button>
-      <button type="button" class="otisak tih" (click)="odustao.emit()">
-        Plati kasnije
-      </button>
+      <button type="button" class="otisak tih" [disabled]="slanje" (click)="odustao.emit()">Plati kasnije</button>
     </div>
 
-    <!--
-      Kartice za probu su zvanični brojevi iz Stripe dokumentacije, pa se
-      ponašanje poklapa sa onim što bi se videlo i sa pravim ključem.
-    -->
     <div class="obavestenje" style="margin-top: 22px">
       <strong>Kartice za probu</strong><br />
       <span class="jednosir">4242 4242 4242 4242</span> — plaćanje prolazi<br />
       <span class="jednosir">4000 0000 0000 0002</span> — banka odbija karticu<br />
-      <span class="jednosir">4000 0000 0000 9995</span> — nema dovoljno sredstava<br />
-      <span class="sitno">
-        Bilo koji CVC i datum u budućnosti. Broj kartice i CVC se nikada ne
-        čuvaju — u bazi ostaju samo tip kartice i poslednje četiri cifre.
-      </span>
+      <span class="sitno">Bilo koji CVC i datum u budućnosti. Koristi isključivo Stripe Test Mode kartice.</span>
     </div>
   }
 </div>

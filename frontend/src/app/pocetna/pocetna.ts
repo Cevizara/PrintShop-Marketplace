@@ -33,25 +33,7 @@ export class Pocetna implements OnInit {
   poruka = '';
   ucitavanje = false;
 
-  /**
-   * Ukupan broj proizvoda na stanju, za uvodnu traku.
-   *
-   * Ne traži se posebno sa servera: pretraga bez ijednog filtera ionako vraća
-   * celu ponudu, pa se broj čita odatle. Zato se i upisuje samo kada je
-   * pretraga bila bez filtera — inače bi posle svake pretrage pisalo koliko je
-   * poslednji rezultat imao redova, a traka govori o veličini ponude.
-   *
-   * `null` znači „još nije stiglo"; traka tada tu brojku ne prikazuje uopšte,
-   * jer bi 0 bila netačna.
-   */
-  ukupnoProizvoda: number | null = null;
-
   slika = slikaUrl;
-
-  /** Vodeća nula: na radnom nalogu se „3" piše kao „03". Veći brojevi se ne diraju. */
-  dveCifre(broj: number): string {
-    return String(broj).padStart(2, '0');
-  }
 
   /**
    * Slika proizvoda, uz poštovanje izbora iz galerije.
@@ -94,11 +76,6 @@ export class Pocetna implements OnInit {
         this.pretrazeno = true;
         this.poruka = rezultati.length ? '' : 'Nema proizvoda koji odgovaraju pretrazi.';
 
-        // Cela ponuda se vidi samo kada nema nijednog filtera. Tada — i samo
-        // tada — ovaj broj znači „proizvoda na stanju".
-        if (!naziv && kategorija === 'Sve kategorije') {
-          this.ukupnoProizvoda = rezultati.length;
-        }
       },
       error: () => {
         this.ucitavanje = false;

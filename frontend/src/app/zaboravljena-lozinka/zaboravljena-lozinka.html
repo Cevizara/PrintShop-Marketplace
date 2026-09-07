@@ -4,15 +4,12 @@
   <span class="mark dl"></span>
   <span class="mark dd"></span>
 
-  <span class="nadnaslov">Obrazac 03 &middot; poništavanje lozinke</span>
   <h1 class="naslov-lista">Zaboravljena lozinka</h1>
   <div class="crta"></div>
 
   @if (!odgovor) {
     <p class="napomena" style="margin-bottom: 22px">
-      Unesite korisničko ime ili i-mejl adresu naloga. Dobićete privremeni link
-      za postavljanje nove lozinke, koji važi 5 minuta i može se iskoristiti
-      samo jednom.
+      Link važi 5 minuta i može se iskoristiti samo jednom.
     </p>
 
     @if (greska) {
@@ -64,6 +61,5 @@
 
   <div class="podnozje-lista">
     <span class="sitno"><a routerLink="/prijava">← Nazad na prijavu</a></span>
-    <span class="sitno">PH &middot; 03</span>
   </div>
 </div>

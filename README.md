@@ -66,9 +66,19 @@ Dostupna na **http://localhost:4200**.
 | `pera` … `vuk` | `Klijent1!` … `Klijent8!` | klijenti — fizička lica |
 | `etf` | `Pravno11!` | klijent — pravno lice |
 
-Nalozi `novastamparija` i `jelena` namerno čekaju odobrenje administratora, i
-namerno nemaju svoju profilnu sliku — tako se vidi i podrazumevana
-`default_profile_image.jpg`. Ostali nalozi imaju generisan avatar.
+Posle proširenog seed-a postoje i dodatni nalozi za demonstraciju većeg sistema:
+
+| Korisničko ime | Lozinka | Uloga |
+|---|---|---|
+| `artprint` … `vrsacmedia` | `Stampar4!` … `Stampar9!` | još šest štamparija, u šest različitih gradova |
+| `maja` … `dunja` | `Klijent9!` … `Klijent20!` | još dvanaest klijenata — fizičkih lica |
+| `startit` | `Pravno22!` | klijent — pravno lice; ima otvorenu korpu za javnu nabavku |
+| `kulturacentar` | `Pravno33!` | klijent — pravno lice; ima neuspelu javnu nabavku |
+
+Nalozi `novastamparija`, `jelena`, `brzaprinta`, `marija`, `dalibor` i
+`skolaplus` namerno čekaju odobrenje administratora, i namerno nemaju svoju
+profilnu sliku — tako se vidi i podrazumevana `default_profile_image.jpg`.
+Ostali nalozi imaju generisan avatar.
 
 Za probu uvoza lager liste iz JSON fajla poslužiće `primer-proizvodi.json` iz
 korena projekta (Prilog 1 teksta zadatka). Prijavite se kao `printnovi` — taj
@@ -187,6 +197,7 @@ Za pravi poziv, uzeti besplatan **test** ključ sa
 
 ```
 STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PUBLISHABLE_KEY=pk_test_...
 STRIPE_CURRENCY=rsd
 ```
 
@@ -196,10 +207,12 @@ dinarima — staviti `STRIPE_CURRENCY=eur`.
 Odgovor servera posle plaćanja nosi polje **`engine`**: `"stripe"` ako je poziv
 zaista otišao, `"lokalno"` ako je odlučio server. Tako se ne pogađa.
 
-Ako poziv ka Stripe-u padne — nema mreže, ključ ne valja, valuta nije podržana —
-naplata **ne puca** nego prelazi na lokalnu odluku, a razlog se ispiše u
-konzoli. Odbijena kartica nije takav slučaj: to je legitiman ishod i klijent
-vidi razlog.
+Kada su oba test ključa prisutna, Stripe Elements prikuplja broj kartice, datum
+i CVC direktno za Stripe — ne prolaze kroz Angular ni backend. Backend zatim
+ponovo proverava PaymentIntent (iznos, valuta, vlasnik i fakture) pre promene
+statusa. Ako Stripe poziv padne, naplata ostaje neuspešna; nema prikrivenog
+prelaska u lokalni uspeh. Lokalni režim postoji samo kada oba Stripe ključa
+nisu podešena.
 
 Brojevi test kartica: `4242 4242 4242 4242` prolazi, `4000 0000 0000 0002`
 banka odbija, `4000 0000 0000 9995` nema sredstava, `4000 0000 0000 0069`

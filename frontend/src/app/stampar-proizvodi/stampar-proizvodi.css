@@ -21,6 +21,8 @@
 .red-unosa { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
 
 .galerija-sada { display: flex; gap: 10px; flex-wrap: wrap; }
+.slika-glavna { display: grid; gap: 5px; justify-items: start; }
+.veoma-mali { font-size: 10px; padding: 4px 6px; }
 
 @media (max-width: 720px) {
   .red-unosa .otisak { width: 100%; }

@@ -1,51 +1,15 @@
 <!-- ================= UVOD =================
-     Traka je složena kao radni nalog: oznaka, naslov, pa red brojki koje
-     kažu koliko ponuda zapravo ima. Ranije je ovde stajala jedna velika
-     cifra u naslovnom pismu, sama uz desnu ivicu — obrazloženje zamene je
-     uz .brojke u pocetna.css. -->
+     Naziv sistema već postoji u zaglavlju, zato ovde ostaje samo poruka koju
+     početna strana treba da prenese i jedan stvaran podatak: broj štamparija. -->
 <section class="uvod">
-  <div class="uvod-oznaka">
-    <span class="traka-cmyk">
-      <span style="background: var(--cijan)"></span>
-      <span style="background: var(--magenta)"></span>
-      <span style="background: var(--zuta)"></span>
-      <span style="background: var(--papir)"></span>
-    </span>
-    <span>Printing House · katalog</span>
-  </div>
-
   <h1>Sve štamparije.<br />Jedno mesto.</h1>
 
-  <p>
-    Od jednog komada do lager liste — pretražite ponudu, pripremite svoju
-    štampu i naručite bez odlaska u štampariju.
-  </p>
-
   @if (podaci) {
-    <div class="brojke">
-      <div class="brojka">
-        <span class="crtica" style="background: var(--cijan)"></span>
-        <span class="broj">{{ dveCifre(podaci.printerCount) }}</span>
-        <span class="opis">registrovanih štamparija</span>
-      </div>
-
-      <!-- Obe brojke ispod se prikazuju tek kad stignu. Dok se čekaju, bolje
-           je da ih nema nego da pišu 00 — to bi bio netačan podatak. -->
-      @if (ukupnoProizvoda !== null) {
-        <div class="brojka">
-          <span class="crtica" style="background: var(--magenta)"></span>
-          <span class="broj">{{ dveCifre(ukupnoProizvoda) }}</span>
-          <span class="opis">proizvoda na stanju</span>
-        </div>
-      }
-
-      @if (kategorije.length) {
-        <div class="brojka">
-          <span class="crtica" style="background: var(--zuta)"></span>
-          <span class="broj">{{ dveCifre(kategorije.length) }}</span>
-          <span class="opis">kategorija štampe</span>
-        </div>
-      }
+    <!-- Mali list papira, a ne treći blok teksta: broj ostaje podatak, ali
+         izgleda kao otisnuta oznaka koju je štampar upravo izbacio. -->
+    <div class="broj-papir" [attr.aria-label]="podaci.printerCount + ' registrovanih štamparija'">
+      <strong>{{ podaci.printerCount }}</strong>
+      <span class="broj-papir-opis">registrovanih<br />štamparija</span>
     </div>
   }
 </section>

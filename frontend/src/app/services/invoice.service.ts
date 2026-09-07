@@ -54,6 +54,25 @@ export class InvoiceService {
     }>(`${API}/invoices/pay`, { invoiceIds, cardNumber, cvc, expiry });
   }
 
+  zapocniPlacanje(invoiceIds: string[]) {
+    return this.http.post<
+      | { mode: 'local' }
+      | { mode: 'stripe'; clientSecret: string; publishableKey: string; currency: string }
+    >(`${API}/invoices/payment-intent`, { invoiceIds });
+  }
+
+  potvrdiStripePlacanje(invoiceIds: string[], paymentIntentId: string) {
+    return this.http.post<{
+      message: string;
+      paid: { _id: string; number: string; total: number }[];
+      total: number;
+      brand: string;
+      last4: string;
+      reference: string;
+      engine: 'stripe';
+    }>(`${API}/invoices/pay/confirm`, { invoiceIds, paymentIntentId });
+  }
+
   /**
    * PDF fakture, kao blob.
    *

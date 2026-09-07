@@ -33,6 +33,13 @@ export class ProductService {
     );
   }
 
+  postaviGlavnuSliku(id: string, image: string) {
+    return this.http.patch<{ message: string; product: Proizvod }>(
+      `${API}/products/${id}/main-image`,
+      { image }
+    );
+  }
+
   uvezi(fajl: File) {
     const podaci = new FormData();
     podaci.append('file', fajl);

@@ -287,6 +287,60 @@ async function main(): Promise<void> {
 
   await baza.collection("products").insertMany(proizvodi as never[]);
 
+  // 7a) Korpe za demonstraciju ---------------------------------------------
+  // Korpa je namerno samo kod nekoliko naloga: na odbrani se vide i prazna
+  // korpa, i korpa koja razdvaja proizvode po stampariji, bez zatrpavanja
+  // svakog klijenta istim pocetnim stanjem.
+  const korpe = [
+    {
+      _id: oid(),
+      clientId: fizickaLica[0]._id,
+      items: [
+        {
+          _id: oid(), productId: proizvodi[0]._id, quantity: 12, color: "Tamno plava",
+          printServiceId: proizvodi[0].printServices[0]._id, printText: "PERIĆ TIM",
+          printImage: "", printX: 50, printY: 46, printScale: 42, addedAt: danaRanije(1),
+        },
+        {
+          _id: oid(), productId: proizvodi[24]._id, quantity: 2, color: "Bela",
+          printServiceId: proizvodi[24].printServices[0]._id, printText: "PROLEĆNA PONUDA",
+          printImage: "", printX: 50, printY: 50, printScale: 46, addedAt: danaRanije(1),
+        },
+      ],
+      updatedAt: danaRanije(1),
+    },
+    {
+      _id: oid(),
+      clientId: fizickaLica[8]._id,
+      items: [
+        {
+          _id: oid(), productId: proizvodi[40]._id, quantity: 80, color: "Srebrna",
+          printServiceId: proizvodi[40].printServices[0]._id, printText: "VALJEVO 2026",
+          printImage: "", printX: 50, printY: 50, printScale: 46, addedAt: danaRanije(2),
+        },
+      ],
+      updatedAt: danaRanije(2),
+    },
+    {
+      _id: oid(),
+      clientId: pravnaLica[1]._id,
+      items: [
+        {
+          _id: oid(), productId: proizvodi[20]._id, quantity: 60, color: "Bela",
+          printServiceId: proizvodi[20].printServices[0]._id, printText: "START IT",
+          printImage: "", printX: 50, printY: 50, printScale: 46, addedAt: danaRanije(1),
+        },
+        {
+          _id: oid(), productId: proizvodi[31]._id, quantity: 40, color: "Bela",
+          printServiceId: proizvodi[31].printServices[0]._id, printText: "START IT",
+          printImage: "", printX: 50, printY: 50, printScale: 46, addedAt: danaRanije(1),
+        },
+      ],
+      updatedAt: danaRanije(1),
+    },
+  ];
+  await baza.collection("carts").insertMany(korpe as never[]);
+
   // 8) Ocene ----------------------------------------------------------------
   // Rasporedjene kroz vreme i po razlicitim klijentima, jer jedan klijent sme
   // imati najvise jednu ocenu po proizvodu.
@@ -384,6 +438,51 @@ async function main(): Promise<void> {
       ],
       total: iznos,
       status: STATUSI_FAKTURA[brojacFaktura % STATUSI_FAKTURA.length],
+      createdAt: kada,
+      updatedAt: kada,
+    });
+  }
+
+  /*
+   * Dodatna istorija nije samo nasumican broj redova. Prolazi kroz ceo prosiren
+   * katalog, sve klijente i sve statuse koje tabela prikazuje. Tako se na
+   * profilu, kod stampara, u arhivi i na administratorovim grafikonima vide
+   * filtriranje, sortiranje i razliciti ishodi bez kliktanja kroz desetine
+   * rucno napravljenih narudzbina pred komisijom.
+   */
+  const STATUSI_DEMO = ["RECEIVED", "DELIVERED", "PRINTING", "PAID", "ORDERED", "CANCELLED"];
+  for (let redni = 0; redni < 42; redni++) {
+    const proizvod = proizvodi[(redni * 7 + 3) % proizvodi.length];
+    const klijent = fizickaLica[(redni * 3 + 1) % fizickaLica.length];
+    const kada = danaRanije(3 + ((redni * 11) % 116));
+    const kolicina = 5 + ((redni * 13) % 45);
+    const usluga = proizvod.printServices[0];
+    const dodatna = usluga ? usluga.extraPricePerPiece : 0;
+    const iznos = (proizvod.unitPrice + dodatna) * kolicina;
+    const status = STATUSI_DEMO[redni % STATUSI_DEMO.length];
+
+    brojacFaktura++;
+    fakture.push({
+      _id: oid(),
+      number: `PH-${kada.getFullYear()}-${String(brojacFaktura).padStart(4, "0")}`,
+      clientId: klijent._id,
+      printerId: proizvod.printerId,
+      items: [{
+        _id: oid(), productId: proizvod._id, code: proizvod.code, name: proizvod.name,
+        unitPrice: proizvod.unitPrice, quantity: kolicina,
+        color: proizvod.availableColors[redni % proizvod.availableColors.length] ?? "Bela",
+        printType: usluga?.printType ?? "", extraPricePerPiece: dodatna,
+        printText: redni % 3 === 0 ? "Demo štampa 2026" : "", printImage: "",
+        printX: 50, printY: 50, printScale: 46, lineTotal: iznos,
+      }],
+      total: iznos,
+      status,
+      ...(status === "PAID" ? {
+        paidAt: kada,
+        paymentBrand: "visa",
+        paymentLast4: "4242",
+        paymentRef: `demo-payment-${brojacFaktura}`,
+      } : {}),
       createdAt: kada,
       updatedAt: kada,
     });
@@ -554,6 +653,55 @@ async function main(): Promise<void> {
     invoiceId: fakturaNabavke._id,
   } as never);
 
+  // Dve dodatne nabavke pokrivaju preostala stanja ekrana. Otvorena ima rok
+  // racunat od trenutka seeda (nikad "sinoc"), pa se odmah moze demonstrirati
+  // slanje ponude. Neuspela je istorijski primer za poruku bez pobednika.
+  const otvorenaId = oid();
+  const otvorenaRaspisana = new Date(SADA - 2 * 60 * 1000);
+  const otvorenaRok = new Date(SADA + 8 * 60 * 1000);
+  const stavkeOtvorene = ["PR-021", "PR-020", "PR-022"].map((sifraUzora, redni) => {
+    const uzor = poSifri(sifraUzora);
+    return {
+      _id: oid(),
+      name: uzor.name,
+      categoryName: uzor.categoryName,
+      subcategoryName: uzor.subcategoryName,
+      quantity: [40, 60, 100][redni],
+      sourceProductId: uzor._id,
+    };
+  });
+  await baza.collection("procurements").insertOne({
+    _id: otvorenaId,
+    number: `JN-${otvorenaRaspisana.getFullYear()}-0002`,
+    clientId: pravnaLica[1]._id,
+    items: stavkeOtvorene,
+    createdAt: otvorenaRaspisana,
+    deadline: otvorenaRok,
+    status: "OPEN",
+  } as never);
+
+  const neuspesnaRaspisana = danaRanije(16);
+  const neuspesnaRok = new Date(neuspesnaRaspisana.getTime() + 10 * 60 * 1000);
+  const uzorNeuspesne = poSifri("PR-049");
+  await baza.collection("procurements").insertOne({
+    _id: oid(),
+    number: `JN-${neuspesnaRaspisana.getFullYear()}-0003`,
+    clientId: pravnaLica[2]._id,
+    items: [{
+      _id: oid(),
+      name: uzorNeuspesne.name,
+      categoryName: uzorNeuspesne.categoryName,
+      subcategoryName: uzorNeuspesne.subcategoryName,
+      quantity: 25,
+      sourceProductId: uzorNeuspesne._id,
+    }],
+    createdAt: neuspesnaRaspisana,
+    deadline: neuspesnaRok,
+    status: "FAILED",
+    settledAt: new Date(neuspesnaRok.getTime() + 2 * 60 * 1000),
+    failureReason: "Nijedna štamparija nije poslala ponudu pre isteka roka.",
+  } as never);
+
   /*
    * Lager pobednika se skida, isto kao sto bi ga skinulo pravo zakljucivanje.
    * Bez ovoga bi baza tvrdila da je posao dodeljen, a da roba nije nigde otisla.
@@ -568,7 +716,7 @@ async function main(): Promise<void> {
   // faktura dobila broj koji vec postoji i pala na jedinstvenom indeksu.
   await baza.collection("counters").insertOne({ _id: "invoice", seq: brojacFaktura } as never);
   // Isto vazi i za brojac nabavki: sledeca raspisana mora da bude JN-...-0002.
-  await baza.collection("counters").insertOne({ _id: "procurement", seq: 1 } as never);
+  await baza.collection("counters").insertOne({ _id: "procurement", seq: 3 } as never);
 
   // 11) Izvestaj ------------------------------------------------------------
   const nalozi = [
@@ -581,8 +729,8 @@ async function main(): Promise<void> {
   console.log("");
   console.log(`Upisano: ${kategorije.length} kategorije, ${proizvodi.length} proizvoda, ${ocene.length} ocena, ${fakture.length + 1} faktura.`);
   console.log(
-    `Javna nabavka JN-${raspisana.getFullYear()}-0001: ${ponude.length} ponude, ` +
-      `dobila je ${STAMPARIJE[PONUDE.findIndex((p) => String(stamparije[p.stampar]._id) === String(pobednik.printerId))].institution.name} ` +
+    `Javne nabavke: 3 (zaključena sa ${ponude.length} ponude, otvorena do ${otvorenaRok.toLocaleTimeString("sr-RS")}, neuspešna). ` +
+      `Prvu je dobila ${STAMPARIJE[PONUDE.findIndex((p) => String(stamparije[p.stampar]._id) === String(pobednik.printerId))].institution.name} ` +
       `sa ${pobednik.total.toLocaleString("sr-RS")} RSD.`
   );
   console.log("");

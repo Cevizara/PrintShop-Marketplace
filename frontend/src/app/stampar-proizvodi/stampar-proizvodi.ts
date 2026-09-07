@@ -39,6 +39,7 @@ export class StamparProizvodi implements OnInit {
   dodatneSlike: File[] = [];
   greskaSlika = '';
   slanjeSlika = false;
+  menjanjeGlavne = '';
 
   slika = slikaUrl;
 
@@ -156,6 +157,25 @@ export class StamparProizvodi implements OnInit {
   /** Koliko još slika staje u galeriju - tekst zadatka dozvoljava najviše tri. */
   slobodnihMesta(proizvod: Proizvod): number {
     return 3 - proizvod.additionalImages.length;
+  }
+
+  /** Postavlja postojeci thumbnail kao naslovnu sliku, bez novog otpremanja. */
+  postaviGlavnuSliku(proizvod: Proizvod, putanja: string): void {
+    this.poruka = '';
+    this.greskaSlika = '';
+    this.menjanjeGlavne = proizvod._id;
+
+    this.servis.postaviGlavnuSliku(proizvod._id, putanja).subscribe({
+      next: (odgovor) => {
+        this.menjanjeGlavne = '';
+        this.poruka = odgovor.message;
+        this.zameni(odgovor.product);
+      },
+      error: (g) => {
+        this.menjanjeGlavne = '';
+        this.greskaSlika = g.error?.message ?? 'Promena glavne slike nije uspela.';
+      },
+    });
   }
 
   posaljiSlike(proizvod: Proizvod): void {

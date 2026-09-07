@@ -5,13 +5,58 @@ import { Paleta, oblikZa } from "./oblici";
 /**
  * Uzorci slika za popunjenu bazu.
  *
- * Prave slike proizvoda stampari otpremaju kroz aplikaciju. Ovde se prave
- * jednostavni SVG uzorci, da bi galerija i spiskovi imali sta da prikazu.
- * SVG je izabran jer je obican tekst - ne treba nikakva biblioteka za obradu
- * slika, a prikaz ostaje ostar na svakoj velicini.
+ * Prave slike proizvoda stampari otpremaju kroz aplikaciju. Seed koristi
+ * lokalne, fotorealistične JPEG katalog-fotografije, da galerija izgleda kao
+ * stvaran katalog i da ne zavisi od spoljnog sajta ili URL-a.
  */
 
 const KOREN = path.join(__dirname, "..", "..", "uploads");
+const KOREN_FOTOGRAFIJA = path.join(__dirname, "assets", "product-photos");
+
+/** Fotografije su organizovane po potkategoriji, ne po pojedinačnoj šifri. */
+const FOTOGRAFIJA_ZA_POTKATEGORIJU: Record<string, string> = {
+  "Štampa na majicama": "majica",
+  "Štampa na duksevima": "duks",
+  "Šolje": "solja",
+  "Štampa na cegerima": "ceger",
+  "Posteri": "poster",
+  "Flajeri": "flajer",
+  "Vizit karte": "vizit-karta",
+  "Fascikle": "fascikla",
+  "Olovke": "olovka",
+  "Zahvalnice": "zahvalnica",
+  "Pozivnice": "pozivnica",
+  "Rollups": "rollup",
+  "Fototapete": "fototapeta",
+};
+
+/**
+ * Ovi proizvodi se oblikom ili materijalom razlikuju od generičke potkategorije.
+ * Bez preslikavanja bi, na primer, crna magična šolja dobila belu fotografiju,
+ * a duks bez kapuljače fotografiju modela sa kapuljačom.
+ */
+const FOTOGRAFIJA_ZA_PROIZVOD: Record<string, string> = {
+  "PR-001": "polo-majica",
+  "PR-011": "polo-majica",
+  "PR-012": "polo-majica",
+  "PR-020": "solja-obojena",
+  "PR-023": "olovka-reciklirana",
+  "PR-027": "duks-bez-kapuljace",
+  "PR-032": "solja-latte",
+  "PR-033": "majica-sportska",
+  "PR-034": "ceger-juta",
+  "PR-036": "fascikla-gumica",
+  "PR-039": "duks-decji",
+  "PR-040": "solja-kasicica",
+  "PR-041": "olovka-metalna",
+  "PR-042": "vizit-soft-touch",
+  "PR-043": "fototapeta-beton",
+  "PR-045": "polo-majica",
+  "PR-049": "rollup-dvostrani",
+  "PR-050": "solja-magicna-crna",
+  "PR-051": "duks-oversize",
+  "PR-052": "fascikla-kraft",
+};
 
 // 1x1 JPEG - podrazumevana profilna slika koju tekst zadatka imenuje
 const PRAZAN_JPEG =
@@ -28,10 +73,7 @@ const PRAZAN_JPEG =
   "uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iii" +
   "gD//2Q==";
 
-/**
- * Palete za varijante iste slike. Svaki proizvod dobija tri, pa galerija ima
- * sta da menja - kao da je isti predmet snimljen u tri boje.
- */
+/** Palete proizvoda. Sve slike jednog proizvoda koriste istu paletu. */
 const PALETE: { podloga: string; predmet: Paleta }[] = [
   { podloga: "#EFEAE0", predmet: { telo: "#FBF9F4", ivica: "#1A1815", detalj: "#C9C0AE" } },
   { podloga: "#E4E9EC", predmet: { telo: "#2C4A54", ivica: "#12303A", detalj: "#7FA3AF" } },
@@ -50,8 +92,8 @@ const PALETE: { podloga: string; predmet: Paleta }[] = [
  */
 function svgProizvod(
   potkategorija: string,
-  oznaka: string,
-  paleta: { podloga: string; predmet: Paleta }
+  paleta: { podloga: string; predmet: Paleta },
+  transformacija = ""
 ): string {
   return [
     '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">',
@@ -61,17 +103,18 @@ function svgProizvod(
     '    <path d="M28 60 V28 H60"/><path d="M540 28 H572 V60"/>',
     '    <path d="M572 540 V572 H540"/><path d="M60 572 H28 V540"/>',
     "  </g>",
+    `  <g transform="${transformacija}">`,
     oblikZa(potkategorija)(paleta.predmet),
-    // oznaka varijante, sitno u dnu
-    `  <text x="300" y="586" text-anchor="middle" fill="${paleta.predmet.ivica}" opacity="0.45"`,
-    '        font-family="monospace" font-size="15" letter-spacing="3">' + oznaka + "</text>",
+    "  </g>",
     "</svg>",
   ].join("\n");
 }
 
 /**
  * Pravi uzorke slika i vraca putanje koje se upisuju u bazu.
- * Za svaki proizvod: glavna slika + dve dodatne za galeriju.
+ * Za svaki proizvod: glavna slika + tri dodatne za galeriju. Prikazi nisu
+ * varijante boje: to je zaseban izbor kupca pri naručivanju. Četvrti kadar je
+ * kontekstualni (proizvod u upotrebi ili na neutralnoj lutki).
  */
 export function napraviUzorkeSlika(
   proizvodi: { code: string; name: string; potkategorija: string }[]
@@ -87,18 +130,20 @@ export function napraviUzorkeSlika(
 
   const rezultat: Record<string, { glavna: string; dodatne: string[] }> = {};
 
-  proizvodi.forEach((proizvod, redni) => {
+  proizvodi.forEach((proizvod) => {
     const putanje: string[] = [];
 
-    for (let varijanta = 0; varijanta < 3; varijanta++) {
-      const paleta = PALETE[(redni + varijanta) % PALETE.length];
-      const ime = `${proizvod.code.toLowerCase()}-${varijanta + 1}.svg`;
+    const kljuc =
+      FOTOGRAFIJA_ZA_PROIZVOD[proizvod.code] ??
+      FOTOGRAFIJA_ZA_POTKATEGORIJU[proizvod.potkategorija];
+    if (!kljuc) throw new Error(`Nedostaje fotografija za potkategoriju: ${proizvod.potkategorija}`);
 
-      fs.writeFileSync(
-        path.join(KOREN, "product", ime),
-        svgProizvod(proizvod.potkategorija, `${proizvod.code} · ${varijanta + 1}/3`, paleta),
-        "utf8"
-      );
+    for (let varijanta = 1; varijanta <= 4; varijanta++) {
+      const izvor = path.join(KOREN_FOTOGRAFIJA, `${kljuc}-${varijanta}.jpg`);
+      const ime = `${proizvod.code.toLowerCase()}-${varijanta}.jpg`;
+      if (!fs.existsSync(izvor)) throw new Error(`Nedostaje seed fotografija: ${izvor}`);
+
+      fs.copyFileSync(izvor, path.join(KOREN, "product", ime));
 
       putanje.push(`product/${ime}`);
     }
@@ -110,7 +155,7 @@ export function napraviUzorkeSlika(
   // ukljucujuci i one uvezene iz JSON fajla.
   fs.writeFileSync(
     path.join(KOREN, "default_product_image.svg"),
-    svgProizvod("", "BEZ SLIKE", PALETE[0]),
+    svgProizvod("", PALETE[0]),
     "utf8"
   );
 

@@ -6,7 +6,12 @@ import Rating from "../models/Rating";
 import User from "../models/User";
 import { posalji } from "../utils/mail";
 import { fakturaUPdf } from "../utils/pdf";
-import { naplati } from "../utils/placanje";
+import {
+  naplatiLokalno,
+  napraviPaymentIntent,
+  potvrdiPaymentIntent,
+  stripeJePodesen,
+} from "../utils/placanje";
 
 /**
  * Po cemu sme da se sortira tabela narudzbina.
@@ -330,14 +335,21 @@ export class InvoiceController {
       // jedna kartica moze da plati vise njih odjednom.
       const iznos = fakture.reduce((zbir, f) => zbir + f.total, 0);
 
-      const ishod = await naplati(
-        {
-          number: String(req.body.cardNumber ?? ""),
-          cvc: String(req.body.cvc ?? ""),
-          expiry: String(req.body.expiry ?? ""),
-        },
-        iznos
-      );
+      // Ova ruta prima karticu samo u offline demonstracionom režimu. Kada
+      // postoje Stripe ključevi, Angular koristi /payment-intent i Stripe
+      // Elements, tako da broj i CVC ne mogu ni slučajno stići do servera.
+      if (stripeJePodesen()) {
+        res.status(409).json({
+          message: "Stripe Test Mode je uključen. Plaćanje potvrdite kroz Stripe obrazac.",
+        });
+        return;
+      }
+
+      const ishod = naplatiLokalno({
+        number: String(req.body.cardNumber ?? ""),
+        cvc: String(req.body.cvc ?? ""),
+        expiry: String(req.body.expiry ?? ""),
+      });
 
       if (!ishod.uspesno) {
         // Ništa se ne menja. Klijent ponavlja korak plaćanja.
@@ -374,6 +386,96 @@ export class InvoiceController {
     } catch (greska) {
       console.error("plati:", greska);
       res.status(500).json({ message: "Greška na serveru." });
+    }
+  };
+
+  /** Pravi Stripe PaymentIntent iz faktura koje pripadaju prijavljenom klijentu. */
+  zapocniStripePlacanje = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const identifikatori: string[] = Array.isArray(req.body.invoiceIds)
+        ? req.body.invoiceIds.map(String)
+        : [];
+      if (!identifikatori.length || identifikatori.some((id) => !Types.ObjectId.isValid(id))) {
+        res.status(400).json({ message: "Izaberite ispravne fakture za plaćanje." });
+        return;
+      }
+
+      // Bez ključeva aplikacija zadržava postojeću offline demonstraciju.
+      if (!stripeJePodesen()) {
+        res.json({ mode: "local" });
+        return;
+      }
+
+      const fakture = await Invoice.find({
+        _id: { $in: identifikatori }, clientId: req.user!.id, status: "ORDERED",
+      });
+      if (fakture.length !== identifikatori.length) {
+        res.status(409).json({ message: "Neke fakture više nisu dostupne za plaćanje." });
+        return;
+      }
+
+      const iznos = fakture.reduce((zbir, faktura) => zbir + faktura.total, 0);
+      const intent = await napraviPaymentIntent(identifikatori, req.user!.id, iznos);
+      res.json({ mode: "stripe", ...intent });
+    } catch (greska) {
+      console.error("zapocniStripePlacanje:", greska);
+      res.status(502).json({ message: "Stripe nije mogao da započne plaćanje. Proverite test ključeve." });
+    }
+  };
+
+  /**
+   * Stripe.js je već potvrdio karticu. Server ponovo učitava PaymentIntent i
+   * proverava njegov iznos, valutu, vlasnika i tačan skup faktura pre promene
+   * statusa — clientSecret ili ID ne mogu da plate tuđe narudžbine.
+   */
+  potvrdiStripePlacanje = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const identifikatori: string[] = Array.isArray(req.body.invoiceIds)
+        ? req.body.invoiceIds.map(String)
+        : [];
+      const paymentIntentId = String(req.body.paymentIntentId ?? "");
+      if (!paymentIntentId || !identifikatori.length || identifikatori.some((id) => !Types.ObjectId.isValid(id))) {
+        res.status(400).json({ message: "Nedostaju podaci Stripe plaćanja." });
+        return;
+      }
+
+      const fakture = await Invoice.find({
+        _id: { $in: identifikatori }, clientId: req.user!.id, status: "ORDERED",
+      });
+      if (fakture.length !== identifikatori.length) {
+        res.status(409).json({ message: "Neke fakture više nisu dostupne za plaćanje." });
+        return;
+      }
+
+      const iznos = fakture.reduce((zbir, faktura) => zbir + faktura.total, 0);
+      const ishod = await potvrdiPaymentIntent(paymentIntentId, identifikatori, req.user!.id, iznos);
+      if (!ishod.uspesno) {
+        res.status(402).json({ message: ishod.poruka });
+        return;
+      }
+
+      const sada = new Date();
+      for (const faktura of fakture) {
+        faktura.status = "PAID";
+        faktura.paidAt = sada;
+        faktura.paymentBrand = ishod.brend;
+        faktura.paymentLast4 = ishod.poslednje4;
+        faktura.paymentRef = ishod.oznaka;
+        faktura.updatedAt = sada;
+        await faktura.save();
+      }
+
+      res.json({
+        message: fakture.length === 1
+          ? `Plaćanje je uspelo. Faktura ${fakture[0].number} je u statusu „plaćeno“.`
+          : `Plaćanje je uspelo. ${fakture.length} fakture su u statusu „plaćeno“.`,
+        paid: fakture.map((faktura) => ({ _id: faktura._id, number: faktura.number, total: faktura.total })),
+        total: iznos, brand: ishod.brend, last4: ishod.poslednje4,
+        reference: ishod.oznaka, engine: ishod.motor,
+      });
+    } catch (greska) {
+      console.error("potvrdiStripePlacanje:", greska);
+      res.status(502).json({ message: "Stripe potvrda nije uspela. Fakture nisu promenjene." });
     }
   };
 
