@@ -178,27 +178,11 @@
                 @for (stavka of grupa.items; track stavka._id) {
                   <tr [class.nedostupna]="!stavka.available">
                     <td>
-                      <!--
-                        Proizvod sa otiskom onako kako ga je klijent podesio.
-                        Isti račun kao na strani za pripremu — položaj i širina
-                        su u procentima slike, pa isto podešavanje radi i ovde,
-                        na mnogo manjoj slici.
-                      -->
+                      <!-- Minijatura služi samo brzom prepoznavanju proizvoda.
+                           Tekst/slika za štampu ostaju vidljivi u koloni
+                           „Priprema”, ali se ne sabijaju preko 56px fotografije. -->
                       <div class="pregled">
                         <img class="podloga" [src]="slika(stavka.mainImage)" [alt]="stavka.name" />
-                        @if (stavka.printImage || stavka.printText) {
-                          <div class="otisak"
-                               [style.left.%]="stavka.printX"
-                               [style.top.%]="stavka.printY"
-                               [style.width.%]="stavka.printScale">
-                            @if (stavka.printImage) {
-                              <img [src]="slika(stavka.printImage)" alt="" />
-                            }
-                            @if (stavka.printText) {
-                              <span>{{ stavka.printText }}</span>
-                            }
-                          </div>
-                        }
                       </div>
                     </td>
                     <td>

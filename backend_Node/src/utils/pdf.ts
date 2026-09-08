@@ -139,14 +139,19 @@ function red(
 }
 
 function podnozje(dokument: Dokument, napomena: string): void {
-  dokument
-    .font(telo())
-    .fontSize(7.5)
-    .fillColor(BLAGO)
-    // Dve linije napomene na y=780 prelaze A4 donju marginu (791px sa
-    // marginom 50), pa PDFKit automatski otvara praznu drugu stranu. Footer
-    // stoji dovoljno visoko da obe linije ostanu na prvoj strani.
-    .text(napomena, 50, 758, { width: 495, align: "left" });
+  const redovi = napomena.split("\n");
+  dokument.font(telo()).fontSize(7.5).fillColor(BLAGO);
+
+  // Ne prepuštamo PDFKit-u prelom dugačke napomene pri samom dnu strane:
+  // automatski prelom tada ume da napravi novu, skoro praznu stranu. Svaki red
+  // footera je eksplicitno iznad donje margine A4 papira.
+  redovi.forEach((redTeksta, indeks) => {
+    dokument.text(redTeksta, 50, 734 + indeks * 11, {
+      width: 495,
+      align: "left",
+      lineBreak: false,
+    });
+  });
 }
 
 /* ==========================================================================
