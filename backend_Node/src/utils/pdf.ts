@@ -143,7 +143,10 @@ function podnozje(dokument: Dokument, napomena: string): void {
     .font(telo())
     .fontSize(7.5)
     .fillColor(BLAGO)
-    .text(napomena, 50, 780, { width: 495, align: "left" });
+    // Dve linije napomene na y=780 prelaze A4 donju marginu (791px sa
+    // marginom 50), pa PDFKit automatski otvara praznu drugu stranu. Footer
+    // stoji dovoljno visoko da obe linije ostanu na prvoj strani.
+    .text(napomena, 50, 758, { width: 495, align: "left" });
 }
 
 /* ==========================================================================

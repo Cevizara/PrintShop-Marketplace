@@ -91,6 +91,10 @@ export class Placanje implements OnInit, OnDestroy {
 
     this.elementi = this.stripe.elements();
     this.kartica = this.elementi.create('card', {
+      // Tekst zadatka traži broj kartice, MM/GG i CVC. Poštanski broj je
+      // Stripe-ov podrazumevani dodatak za AVS proveru, ali za Test Mode i
+      // naš obrazac nije potreban.
+      hidePostalCode: true,
       style: {
         base: {
           color: '#202321',
