@@ -1,228 +1,207 @@
 # Printing House
 
-Projekat iz predmeta **Programiranje internet aplikacija**, školska 2025/26.
+> A full-stack marketplace that connects print customers with print shops—from product discovery and print preparation to ordering, tenders, invoicing, and payment.
 
-Veb sistem koji povezuje štamparije i naručioce štampe. Tri vrste korisnika:
-klijenti (fizička i pravna lica), štampari i administrator sistema.
+![Angular 20](https://img.shields.io/badge/Angular-20-DD0031?logo=angular&logoColor=white)
+![Express 5](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?logo=mongodb&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)
 
-**Angular 20** (klijentski deo) + **Express 5 / Node** (serverski deo) + **MongoDB**.
+<p align="center">
+  <img src="docs/images/homepage.png" alt="Printing House public home page" width="100%">
+</p>
 
----
+Printing House is a role-based web platform for three groups of users: customers (individuals and companies), print shops, and system administrators. It covers the complete ordering lifecycle while also supporting public procurement workflows, inventory management, analytics, PDF documents, email delivery, and Stripe test payments.
 
-## Pokretanje
+This project was developed for the **Internet Application Programming** course during the 2025/26 academic year.
 
-Potreban je pokrenut MongoDB na `mongodb://127.0.0.1:27017`.
-Na Windows-u, iz komandne linije **sa administratorskim pravima**:
+## Highlights
 
+- **Role-based experience** for customers, print shops, and administrators
+- **Product discovery** with search, categories, galleries, ratings, and print-shop locations
+- **Interactive print preparation** with text/image positioning, print size, color, quantity, and service selection
+- **Shopping cart and fulfillment** split by print shop, with order status tracking and cancellation
+- **Public procurement and bidding** with stock-aware winner selection and downloadable PDF reports
+- **Inventory management** with manual editing and JSON batch import
+- **Administration** of registration requests, users, categories, and three analytics views
+- **PDF invoicing and email delivery** through SMTP or zero-configuration Ethereal test mail
+- **Stripe test payments** with an offline local simulation mode for development
+- **Ratings, comments, order history, and product archive** after fulfillment
+
+## Tech stack
+
+| Layer | Technologies |
+| --- | --- |
+| Frontend | Angular 20, TypeScript, RxJS, Stripe.js |
+| Backend | Node.js, Express 5, TypeScript |
+| Database | MongoDB, Mongoose |
+| Authentication | JWT, bcrypt |
+| Files and documents | Multer, PDFKit |
+| Email | Nodemailer, Ethereal or SMTP |
+| Payments | Stripe Payment Intents or local test simulation |
+
+## Architecture
+
+```mermaid
+flowchart LR
+    SPA[Angular SPA] -->|REST / JSON| API[Express API]
+    API --> DB[(MongoDB)]
+    API --> PDF[PDF invoices and reports]
+    API --> MAIL[SMTP / Ethereal]
+    API --> PAY[Stripe test mode]
 ```
+
+The frontend and backend are separate applications. Angular owns presentation, routing, guards, and browser-side state; Express owns validation, authorization, business rules, document generation, and persistence.
+
+## Getting started
+
+### Prerequisites
+
+- Node.js and npm
+- MongoDB available at `mongodb://127.0.0.1:27017`
+
+On Windows, a locally installed MongoDB service can usually be started from an elevated terminal with:
+
+```powershell
 net start MongoDB
 ```
 
-### 1. Baza podataka
+### 1. Install and seed the backend
 
-Baza se kreira i popunjava **nezavisno od aplikacije**, kako traži tekst zadatka.
-Aplikacija ima isključen `autoCreate` i `autoIndex` i samo se povezuje na već
-postojeću bazu — kolekcije i indekse pravi isključivo ovaj skript:
-
-```
+```bash
 cd backend_Node
 npm install
 npm run seed
 ```
 
-Skript briše postojeće kolekcije, pravi ih iznova zajedno sa indeksima, i
-popunjava ih podacima dovoljnim da se vide sve funkcionalnosti. Uz to pravi i
-uzorke slika proizvoda u folderu `uploads/`.
+> [!WARNING]
+> `npm run seed` recreates the application's collections and indexes before inserting demo data. Do not point it at a database that contains data you need to keep.
 
-### 2. Server
+Database creation is intentionally independent from the running application: Mongoose `autoCreate` and `autoIndex` are disabled, so the seed script is the single source of truth for collections and indexes.
 
-```
+### 2. Start the API
+
+```bash
 cd backend_Node
 npm start
 ```
 
-Sluša na portu **4000**.
+The API listens on `http://localhost:4000` by default.
 
-### 3. Klijentska aplikacija
+### 3. Start the frontend
 
-```
+In a second terminal:
+
+```bash
 cd frontend
 npm install
 npm start
 ```
 
-Dostupna na **http://localhost:4200**.
+Open `http://localhost:4200`.
 
----
+## Configuration
 
-## Nalozi za prijavu
+The application works locally without an `.env` file. For custom settings, copy `backend_Node/.env.example` to `backend_Node/.env` and update only the values you need.
 
-| Korisničko ime | Lozinka | Uloga |
-|---|---|---|
-| `admin` | `Admin123!` | administrator — prijava na `/admin/prijava` |
-| `copystudio` | `Stampar1!` | štamparija, Beograd |
-| `printnovi` | `Stampar2!` | štamparija, Novi Sad |
-| `nisprint` | `Stampar3!` | štamparija, Niš |
-| `pera` … `vuk` | `Klijent1!` … `Klijent8!` | klijenti — fizička lica |
-| `etf` | `Pravno11!` | klijent — pravno lice |
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `PORT` | `4000` | API port |
+| `MONGO_URI` | local `printing_house_v2` database | MongoDB connection string |
+| `CLIENT_URL` | `http://localhost:4200` | Allowed frontend origin |
+| `JWT_SECRET` | development-only fallback | JWT signing secret; set your own outside local development |
+| `JWT_EXPIRES_IN` | `12h` | Access token lifetime |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | empty / `587` | Optional SMTP delivery; empty credentials enable Ethereal |
+| `MAIL_FROM` | local project sender | Sender shown on invoice emails |
+| `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY` | empty | Optional Stripe **test-mode** credentials |
+| `STRIPE_CURRENCY` | `rsd` | Charge currency; use a currency supported by your Stripe account |
 
-Posle proširenog seed-a postoje i dodatni nalozi za demonstraciju većeg sistema:
+> [!IMPORTANT]
+> `.env` is ignored by Git and must never be committed. Keep MongoDB credentials, JWT secrets, SMTP passwords, and Stripe secret keys only in your local environment or a deployment secret store. Only `.env.example` belongs in the repository.
 
-| Korisničko ime | Lozinka | Uloga |
-|---|---|---|
-| `artprint` … `vrsacmedia` | `Stampar4!` … `Stampar9!` | još šest štamparija, u šest različitih gradova |
-| `maja` … `dunja` | `Klijent9!` … `Klijent20!` | još dvanaest klijenata — fizičkih lica |
-| `startit` | `Pravno22!` | klijent — pravno lice; ima otvorenu korpu za javnu nabavku |
-| `kulturacentar` | `Pravno33!` | klijent — pravno lice; ima neuspelu javnu nabavku |
+### Email behavior
 
-Nalozi `novastamparija`, `jelena`, `brzaprinta`, `marija`, `dalibor` i
-`skolaplus` namerno čekaju odobrenje administratora, i namerno nemaju svoju
-profilnu sliku — tako se vidi i podrazumevana `default_profile_image.jpg`.
-Ostali nalozi imaju generisan avatar.
+With empty SMTP settings, the backend creates an Ethereal test inbox and returns a preview URL after checkout. Messages are not delivered to real recipients. If email delivery fails, the order remains valid and its PDF invoice can still be downloaded from the Orders page.
 
-Za probu uvoza lager liste iz JSON fajla poslužiće `primer-proizvodi.json` iz
-korena projekta (Prilog 1 teksta zadatka). Prijavite se kao `printnovi` — taj
-nalog nema šifre `PR-001` do `PR-003`, pa uvoz prolazi u celini.
+### Payment behavior
 
-Prijava administratora je na **posebnoj ruti** `/admin/prijava` i nigde nije
-povezana linkom sa javnog dela sajta — tako traži tekst zadatka.
+The payment flow chooses one of two explicit modes:
 
-### Javne nabavke — šta se vidi odmah
+- **Local simulation** when Stripe keys are absent. Official Stripe test card numbers are interpreted locally, so the demo works offline.
+- **Stripe Test Mode** when both test keys are present. Stripe Elements collects card details directly; card numbers and CVC values never pass through the Angular app or backend and are never stored in MongoDB.
 
-Nalog `etf` ima jednu **već zaključenu** nabavku `JN-2026-0001`, sa tri ponude i
-PDF izveštajem — da se licitacije vide bez čekanja da rok od deset minuta
-istekne.
+The backend verifies the Payment Intent amount, currency, customer, and invoice ownership before updating payment status. If `rsd` is not supported by the connected test account, set `STRIPE_CURRENCY=usd` (or another supported test currency).
 
-**Pobedila je druga po ceni, i to je ispravno.** Tekst zadatka traži najnižu
-ponudu **i** dovoljnu količinu svakog proizvoda na stanju:
+## Demo accounts
 
-| Štamparija | Ponuda | |
-|---|---|---|
-| Niš Print Centar | 95.500 | najniža, ali nema dovoljno majica ni šolja |
-| **Copy Studio Kumanovska** | **104.000** | **dobila nabavku** |
-| Print Novi Sad | 107.500 | pokriva sve, ali skuplja |
+All credentials below are generated by `npm run seed` and are intended **only for local demonstration**.
 
-Da se vidi **otvorena** licitacija i slanje ponude, treba je raspisati uživo:
-kao `etf` ubaciti proizvode u korpu i pritisnuti POTVRDI, pa se prijaviti kao
-štamparije i poslati ponude.
+| Role | Username | Password | Notes |
+| --- | --- | --- | --- |
+| Administrator | `admin` | `Admin123!` | Sign in at `/admin/prijava` |
+| Print shop | `copystudio` | `Stampar1!` | Belgrade inventory and orders |
+| Individual customer | `pera` | `Klijent1!` | Search, cart, orders, and ratings |
+| Company customer | `etf` | `Pravno11!` | Includes a completed public procurement example |
 
----
+Additional seeded accounts cover multiple cities, approval states, order statuses, ratings, and procurement outcomes. The administrator sign-in route is intentionally separate and is not linked from the public navigation.
 
-## Šta je do sada urađeno
+### Seeded procurement scenario
 
-| Deo | Stanje |
-|---|---|
-| Prijava svih tipova korisnika | gotovo |
-| Registracija (fizičko lice, pravno lice, štamparija) | gotovo |
-| Zaboravljena lozinka (link važi 5 minuta) | gotovo |
-| Javna početna: broj štamparija, TOP 5, pretraga | gotovo |
-| Detalji proizvoda sa galerijom | gotovo |
-| Profil — prikaz i ažuriranje, za sve uloge | gotovo |
-| Klijent: pretraga i prošireni detalji proizvoda | gotovo |
-| Štampar: proizvodi i usluge, količine, uvoz iz JSON fajla | gotovo |
-| Administrator: zahtevi, nalozi, kategorije | gotovo |
-| Mapa štamparije u proširenim detaljima | gotovo |
-| Administrator: grafikon kretanja ocene kroz vreme | gotovo |
-| Priprema proizvoda, e-korpa, zatvaranje narudžbine | gotovo |
-| Tabela narudžbina (na profilu), otkazivanje, promena statusa | gotovo |
-| Javne nabavke i licitacije | gotovo |
-| Ocene, komentari, arhiva proizvoda | gotovo |
-| PDF faktura na i-mejl, PDF izveštaj o licitacijama | gotovo |
-| Sva tri administratorska grafikona | gotovo |
-| Servis za plaćanje karticom | gotovo |
+The `etf` account contains procurement `JN-2026-0001` with three bids and a PDF report. The second-lowest bid wins because the cheapest print shop does not have enough stock—winner selection validates both price and the available quantity of every requested product.
 
-Prijavljeni korisnik se otvara na strani koja je posao njegove uloge: klijent na
-pretrazi, štampar na lager listi, administrator na zahtevima.
+To demonstrate live bidding, create a procurement as a company customer, then sign in as one or more print shops and submit offers before the deadline.
 
----
+## Available scripts
 
-## Struktura
+### Backend (`backend_Node`)
 
-```
-backend_Node/src/
-  config/       podešavanja i povezivanje na bazu
-  models/       Mongoose šeme
-  controllers/  poslovna logika
-  routers/      rute i provera prava pristupa
-  middleware/   JWT autorizacija, otpremanje slika
-  utils/        validacija i mapiranje
-  seed/         skript za kreiranje baze
+| Command | Description |
+| --- | --- |
+| `npm start` | Run the API with `ts-node` |
+| `npm run build` | Compile TypeScript to `dist/` |
+| `npm run serve` | Run the compiled API |
+| `npm run seed` | Recreate collections, indexes, demo data, and sample uploads |
 
-frontend/src/app/
-  models/       tipovi koje server vraća
-  services/     HTTP pozivi, prijava, JWT interceptor, guard, kolačići
-  <strana>/     po jedna komponenta po strani (.ts + .html + .css)
+### Frontend (`frontend`)
+
+| Command | Description |
+| --- | --- |
+| `npm start` | Start the Angular development server |
+| `npm run build` | Create a production build |
+| `npm test` | Run the Angular test runner |
+| `npm run watch` | Rebuild continuously in development mode |
+
+## Project structure
+
+```text
+.
+├── backend_Node/
+│   ├── src/
+│   │   ├── config/       # Environment and database connection
+│   │   ├── controllers/  # Business logic
+│   │   ├── middleware/   # JWT authorization and uploads
+│   │   ├── models/       # Mongoose schemas
+│   │   ├── routers/      # REST endpoints and access control
+│   │   ├── seed/         # Database and demo-data setup
+│   │   └── utils/        # Validation, mapping, mail, PDF, and payments
+│   └── .env.example
+├── frontend/
+│   └── src/app/
+│       ├── models/       # Shared frontend data types
+│       ├── services/     # API clients, auth, guards, and interceptors
+│       └── */            # Feature/page components
+└── docs/images/          # README screenshots
 ```
 
----
+## Security notes
 
-## Podešavanja
+- Passwords are hashed with bcrypt.
+- Protected API routes validate JWTs and enforce role-based permissions.
+- Uploaded files are validated and stored outside version control.
+- Payment card data is never persisted by the application.
+- Secrets are loaded from environment variables; local `.env` files are excluded by `.gitignore`.
+- This is an academic/demo system. Review configuration, validation, logging, and deployment hardening before any production use.
 
-Kopirati `backend_Node/.env.example` u `backend_Node/.env` i prilagoditi.
-Bez tog fajla aplikacija radi sa podrazumevanim vrednostima.
+## Project status
 
-`.env` se **ne čuva u repozitorijumu** — sadrži tajni ključ za potpisivanje
-JWT tokena.
-
-### Pošta
-
-Fakture se šalju klijentu kao PDF prilog. Bez ikakvog podešavanja koristi se
-**Ethereal** — nalog za probu koji se pravi sam, bez registracije. Poruka se ne
-isporučuje nikome nego ostaje na njihovom sajtu, a adresa na kojoj se vidi
-pojavi se u korpi odmah posle potvrde narudžbine.
-
-Za pravu poštu, popuniti u `.env`:
-
-```
-SMTP_HOST=smtp.primer.rs
-SMTP_PORT=587
-SMTP_USER=nalog
-SMTP_PASS=lozinka
-MAIL_FROM=Printing House <faktura@primer.rs>
-```
-
-Slanje **nikada ne obara narudžbinu**: ako padne, faktura je već izdata i PDF se
-i dalje preuzima sa strane „Narudžbine". Ethereal traži internet; preuzimanje ne.
-
-### Plaćanje karticom
-
-Radi na dva načina, i sam bira koji:
-
-- **bez podešavanja** — naplatu rešava server, sa Stripe-ovim zvaničnim
-  brojevima test kartica. Radi i bez interneta.
-- **sa test ključem u `.env`** — ide pravi poziv ka Stripe-u (Test Mode).
-
-Za pravi poziv, uzeti besplatan **test** ključ sa
-`dashboard.stripe.com/test/apikeys` i upisati:
-
-```
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_CURRENCY=rsd
-```
-
-Ako Stripe odbije valutu — nalog otvoren van Srbije često ne može da naplati u
-dinarima — staviti `STRIPE_CURRENCY=usd`.
-
-Odgovor servera posle plaćanja nosi polje **`engine`**: `"stripe"` ako je poziv
-zaista otišao, `"lokalno"` ako je odlučio server. Tako se ne pogađa.
-
-Kada su oba test ključa prisutna, Stripe Elements prikuplja broj kartice, datum
-i CVC direktno za Stripe — ne prolaze kroz Angular ni backend. Backend zatim
-ponovo proverava PaymentIntent (iznos, valuta, vlasnik i fakture) pre promene
-statusa. Ako Stripe poziv padne, naplata ostaje neuspešna; nema prikrivenog
-prelaska u lokalni uspeh. Lokalni režim postoji samo kada oba Stripe ključa
-nisu podešena.
-
-Brojevi test kartica: `4242 4242 4242 4242` prolazi, `4000 0000 0000 0002`
-banka odbija, `4000 0000 0000 9995` nema sredstava, `4000 0000 0000 0069`
-istekla. Broj kartice i CVC se **nikada** ne upisuju u bazu.
-
-### PDF i naša slova
-
-Ugrađeni PDF fontovi nemaju č, ć, š, ž i đ — ta slova su u Latin-2, a fontovi
-koriste Latin-1. Zato se učitava sistemski TTF: **Arial**, pa Calibri, pa Segoe
-UI, pa DejaVu. Prva tri postoje na svakom Windows-u.
-
-Ako se nijedan ne nađe, dokument i dalje nastaje — samo bez dijakritike — i
-server to javi u konzoli pri prvom pravljenju PDF-a.
+The course requirements are implemented end to end: authentication, product and inventory management, administration, print preparation, cart and orders, public procurement, ratings, analytics, PDF generation, email delivery, and card-payment integration.

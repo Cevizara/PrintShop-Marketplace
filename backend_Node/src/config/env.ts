@@ -38,7 +38,8 @@ export const env = {
    * ide pravi poziv ka Stripe-u. Vidi utils/placanje.ts.
    *
    * Valuta je podesiva jer zavisi od zemlje Stripe naloga: nalog otvoren van
-   * Srbije cesto ne moze da naplati u RSD, pa se prelazi na "eur".
+   * Srbije cesto ne moze da naplati u RSD, pa se prelazi na "usd" ili drugu
+   * valutu koju Stripe nalog podrzava.
    */
   stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
   // Javni ključ sme u pregledač, ali ga server vraća tek uz odgovarajući
