@@ -202,7 +202,7 @@ STRIPE_CURRENCY=rsd
 ```
 
 Ako Stripe odbije valutu — nalog otvoren van Srbije često ne može da naplati u
-dinarima — staviti `STRIPE_CURRENCY=eur`.
+dinarima — staviti `STRIPE_CURRENCY=usd`.
 
 Odgovor servera posle plaćanja nosi polje **`engine`**: `"stripe"` ako je poziv
 zaista otišao, `"lokalno"` ako je odlučio server. Tako se ne pogađa.
